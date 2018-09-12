@@ -1,0 +1,20 @@
+language: node_js #指定环境为 Node.js
+
+node_js:
+- "6.0.0"
+
+before_install:
+- export TZ='Asia/Shanghai' #设置时区 非必须
+
+script:
+- hexo generate #生成博客
+
+deploy:
+  provider: pages
+  skip_cleanup: true
+  github_token: $GITHUB_TOKEN
+  local_dir: public
+  repo: AkisAya/akisaya.github.io
+  target_branch: master
+  on:
+    branch: source
