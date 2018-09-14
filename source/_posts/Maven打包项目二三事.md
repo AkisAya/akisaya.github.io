@@ -1,5 +1,5 @@
 ---
-title: Maven打包项目二三事.md
+title: Maven打包项目二三事
 date: 2018-09-14 16:06:00
 categories: web
 tags:
