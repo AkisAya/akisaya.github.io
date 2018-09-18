@@ -117,6 +117,16 @@ Main-Class: Test
 // java -cp xx.jar:lib/xx.jar packageName.MainClassName
 java -cp testpackage-1.0-SNAPSHOT.jar:lib/commons-lang3-3.8.jar Test
 ```
+最近发现`ManifestResourceTransformer` 除了可以指定 `MainClass`, 其实还可以指定 Manifest 文件里任意的属性，类的名字也隐含了这一点，所以如果利用 `shade-plugin` 的话，可以指定读取外置的依赖，只需要在 `manifestEntries` 中增加 `Class-Path` 属性，如下：
+```
+<manifestEntries>
+<Main-Class>${app.main.class}</Main-Class>
+<X-Compile-Source-JDK>${maven.compiler.source}</X-Compile-Source-JDK>
+<X-Compile-Target-JDK>${maven.compiler.target}</X-Compile-Target-JDK>
+<Class-Path>lib/${planet-graph-lib}</Class-Path>
+</manifestEntries>
+```
+打包后，就可以用 java -jar 来运行了
 
 ## springboot 项目打包
 springboot 项目默认使用了 spring-boot-maven-plugin，默认会打包一个嵌入了 tomcat 的可执行 jar 包，最近做的一个项目里就需要引入外置的 jar 包，并且不将其打包到 springboot 的可执行 jar 里，所以可以用上文提到的引入方法。这样如果我们的外置 jar 更新了，只需要替换掉外置的这个 jar，已经打包的应用则不需要更改。
