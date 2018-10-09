@@ -172,7 +172,7 @@ java -Dloader.path=lib ph_pg-0.0.1-SNAPSHOT.jar --spring.profiles.active=prod
 ```
 
 ## 小结
-项目外包不是个好差事，特别是当这个项目小到一个人能完成时，这意味着杂事多，挑战小。闲来无事，记录下碰到的 Maven 打包的问题吧
+闲来无事，记录下碰到的 Maven 打包的问题吧
 
 
 
