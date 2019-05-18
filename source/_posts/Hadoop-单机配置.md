@@ -12,11 +12,11 @@ tags:
 参考 [安装 JDK 的两种方式](https://www.cnblogs.com/a2211009/p/4265225.html)
 ### 1.2 安装 SSH
 在 Ubuntu 环境下，首先安装 SSH
+<!-- more -->
 ```
 $ sudo apt-get install ssh
 ```
 然后配置免密码登录本机节点
-<!-- more -->
 ```
   $ ssh-keygen -t rsa -P '' -f ~/.ssh/id_rsa
   $ cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys
