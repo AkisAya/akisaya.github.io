@@ -3,13 +3,19 @@
 ## Source: https://github.com/hexojs/hexo/
 
 # Site
-title: Live Or Die
+title: Inspiration
 subtitle: 
 description: Take A Leap of Faith
 keywords:
 author: Akisaya
-language:
+language: zh_CN
 timezone:
+
+# seo
+sitemap: 
+  path: sitemap.xml
+baidusitemap:
+  path: baidusitemap.xml
 
 # URL
 ## If your site is put in a subdirectory, set url as 'http://yoursite.com/child' and root as '/child/'
@@ -27,6 +33,7 @@ category_dir: categories
 code_dir: downloads/code
 i18n_dir: :lang
 skip_render:
+    - google3ad31b3ddf733a7c.html
 
 # Writing
 new_post_name: :title.md # File name of new posts
@@ -186,20 +193,3 @@ theme_config:
   # Use velocity to animate everything.
   motion:
     enable: false
-  
-  # SEO
-  # Google Webmaster tools verification.
-  # See: https://www.google.com/webmasters
-  #google_site_verification: 
-
-  # Bing Webmaster tools verification.
-  # See: https://www.bing.com/webmaster
-  #bing_site_verification: 
-
-  # Yandex Webmaster tools verification.
-  # See: https://webmaster.yandex.ru
-  #yandex_site_verification:
-
-  # Baidu Webmaster tools verification.
-  # See: https://ziyuan.baidu.com/site
-  #baidu_site_verification:
