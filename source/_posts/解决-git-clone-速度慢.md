@@ -1,6 +1,6 @@
 ---
-title: 解决 git clone 速度慢
-date: 2019-03-15 15:28:24
+title: 通过代理解决 git clone 和 homebrew 速度慢的问题
+date: 2019-05-18 20:00:00
 tags: 
 - git
 ---
