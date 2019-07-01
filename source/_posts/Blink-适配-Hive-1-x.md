@@ -168,6 +168,9 @@ env.setJobType(JobType.BATCH);
 ```
 不然 sql 里的 limit 会导致任务挂住
 
+## 遗留问题
+即便做了这些修改，blink 读取 hive 数据源的时候，仍无法正确处理分区字段类型为非 string 类型的数据，在写 flink sql 的时候，无法将分区字段 select 出来作为一个新的列。这是因为 blink 在处理分区字段时候把所有的分区字段值都读成了 string（因为直接从文件夹路径读的数据值），但是元数据信息里保存的类型不是 string 的时候就会进行类型转换，而这个类型转换基本都会失败。但是如果不把分区字段 select 出来作为一个新的列，而是放在 where 条件里倒是没有关系
+
 ## 结语
 flink 流处理方面确实很优秀，但是在数据源的兼容性上，离线的计算方面还是需要追赶 spark。flinlk 1.9 将在 7 月份发布，blink 特性会 merge 到主分支，提供 hive connector 和对低版本 hive 的兼容性，并且会重构类型系统原生支持 varchar 等类型。让我们静静期待吧。
 
