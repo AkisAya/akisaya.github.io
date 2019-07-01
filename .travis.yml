@@ -1,7 +1,7 @@
 language: node_js #指定环境为 Node.js
 
 node_js:
-- "6.0.0"
+- "8.16.0"
 
 before_install:
 - export TZ='Asia/Shanghai' #设置时区 非必须
