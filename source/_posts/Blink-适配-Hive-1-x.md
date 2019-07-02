@@ -175,3 +175,7 @@ env.setJobType(JobType.BATCH);
 flink 流处理方面确实很优秀，但是在数据源的兼容性上，离线的计算方面还是需要追赶 spark。flinlk 1.9 将在 7 月份发布，blink 特性会 merge 到主分支，提供 hive connector 和对低版本 hive 的兼容性，并且会重构类型系统原生支持 varchar 等类型。让我们静静期待吧。
 
 最后，千万不要在生产上使用未经验证的解决方案
+
+## Reference
+[Blink 参考手册](http://blink.flink-china.org/)
+[Flink 社区](https://zh.ververica.com/)
