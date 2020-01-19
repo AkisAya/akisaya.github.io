@@ -200,7 +200,7 @@ spec:
 k8s 是如何知道一个 pod 无法提供服务了呢？我们需要定义一个健康检查的 liveness ，k8s 会定期请求这个 liveness，判断服务是否健康。
 readiness 类似，通过 readiness 的定义判读 pod 是否已经可以开始提供服务
 ### 5.2 resources
-k8s 提供了限制 container 所能使用的资源量的方法。`resources.requests` 定义了需要多少资源，用于 k8s 将 pod 调度到资源充足的节点，`resources.limits` 则限制了 container 可以使用的资源总量
+k8s 提供了限制 container 所能使用的资源量的方法。`resources.requests` 定义了需要多少资源，用于 k8s 将 pod 调度到资源充足的节点，`resources.limits` 则限制了 container 可以使用的资源总量。可参考[Kubernetes Container Resource Requirements](https://medium.com/expedia-group-tech/kubernetes-container-resource-requirements-part-1-memory-a9fbe02c8a5f)
 ```
 apiVersion: apps/v1
 kind: Deployment
