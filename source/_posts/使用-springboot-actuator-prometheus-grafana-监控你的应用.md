@@ -9,7 +9,7 @@ tags:
 ---
 
 线上的项目经常需要对一些指标如请求量，qps，延时等指标做统计方便我们观察系统的运行状态，并帮助我们定位系统可能存在的性能等问题。springboot actuator 为 springboot 应用提供了指标的统计方法，prometheus 是一个监控中心，grafana 则是一个数据展示中心，本文将通过一个小案例介绍综合使用 springboot actuator、prometheus、grafana 监控我们的应用。
-
+<!-- more -->
 ## springboot actuator
 ### 引入 springboot actuator
 引入 actuator 依赖即可开始使用 springboot actuator 为我们提供的各种监控指标
