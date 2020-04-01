@@ -1,0 +1,1069 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<html class="theme-next pisces" lang="zh_CN">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2"/>
+<meta name="theme-color" content="#222"/>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2"/>
+
+<link rel="stylesheet" href="/css/main.css?v=7.1.1"/>
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=7.1.1">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=7.1.1">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=7.1.1">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=7.1.1" color="#222">
+
+
+
+
+
+
+
+<script id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '7.1.1',
+    sidebar: {"position":"left","display":"post","b2t":true},
+    back2top: true,
+    back2top_sidebar: false,
+    fancybox: false,
+    fastclick: false,
+    lazyload: false,
+    tabs: true,
+    motion: {"enable":false},
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+  
+
+
+
+
+  <meta name="description" content="shell 命令获取电池信息刚开始使用 macbook pro 后总是查看电池的信息，担心电池衰减快导致续航崩掉 orz，毕竟 macbook 的一个卖点就是续航。后来每次都要打开 system info 切换到 battery 查看，有点麻烦，就产生了一个想法写一个脚本每天自动记录 battery 的最大容量，隔一段时间使用图表画出容量的变化。 经过一番 google 后，一开始是发现了有 py">
+<meta name="keywords" content="python">
+<meta property="og:type" content="article">
+<meta property="og:title" content="使用脚本查看 macOS 电池信息">
+<meta property="og:url" content="https://akisaya.github.io/2017/mac-battery/index.html">
+<meta property="og:site_name" content="Inspiration">
+<meta property="og:description" content="shell 命令获取电池信息刚开始使用 macbook pro 后总是查看电池的信息，担心电池衰减快导致续航崩掉 orz，毕竟 macbook 的一个卖点就是续航。后来每次都要打开 system info 切换到 battery 查看，有点麻烦，就产生了一个想法写一个脚本每天自动记录 battery 的最大容量，隔一段时间使用图表画出容量的变化。 经过一番 google 后，一开始是发现了有 py">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:updated_time" content="2020-04-01T17:40:11.491Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="使用脚本查看 macOS 电池信息">
+<meta name="twitter:description" content="shell 命令获取电池信息刚开始使用 macbook pro 后总是查看电池的信息，担心电池衰减快导致续航崩掉 orz，毕竟 macbook 的一个卖点就是续航。后来每次都要打开 system info 切换到 battery 查看，有点麻烦，就产生了一个想法写一个脚本每天自动记录 battery 的最大容量，隔一段时间使用图表画出容量的变化。 经过一番 google 后，一开始是发现了有 py">
+
+
+
+
+
+  
+  
+  <link rel="canonical" href="https://akisaya.github.io/2017/mac-battery/"/>
+
+
+
+<script id="page.configurations">
+  CONFIG.page = {
+    sidebar: "",
+  };
+</script>
+
+  <title>使用脚本查看 macOS 电池信息 | Inspiration</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .motion-element,
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-title { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh_CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Inspiration</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+    
+    
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="Toggle navigation bar">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  
+    <ul id="menu" class="menu">
+      
+        
+        
+        
+          
+          <li class="menu-item menu-item-home">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br/>Home</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-about">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/about/" rel="section"><i class="menu-item-icon fa fa-fw fa-user"></i> <br/>About</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-tags">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/tags/" rel="section"><i class="menu-item-icon fa fa-fw fa-tags"></i> <br/>Tags</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-categories">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br/>Categories</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-archives">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br/>Archives</a>
+
+  </li>
+
+      
+      
+    </ul>
+  
+
+  
+
+  
+</nav>
+
+
+
+  
+
+
+
+</div>
+    </header>
+
+    
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+            
+
+          
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://akisaya.github.io/2017/mac-battery/"/>
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Akisaya"/>
+      <meta itemprop="description" content="Take A Leap of Faith"/>
+      <meta itemprop="image" content="/uploads/avatar.jpg"/>
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Inspiration"/>
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h2 class="post-title" itemprop="name headline">使用脚本查看 macOS 电池信息
+
+              
+            
+          </h2>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+
+              
+                
+              
+
+              <time title="Created: 2017-12-22 17:51:30" itemprop="dateCreated datePublished" datetime="2017-12-22T17:51:30+08:00">2017-12-22</time>
+            
+
+            
+              
+
+              
+                
+                <span class="post-meta-divider">|</span>
+                
+
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">Edited on</span>
+                
+                <time title="Modified: 2020-04-02 01:40:11" itemprop="dateModified" datetime="2020-04-02T01:40:11+08:00">2020-04-02</time>
+              
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/python/" itemprop="url" rel="index"><span itemprop="name">python</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+            
+              
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+            
+                <span class="post-meta-item-text">Comments: </span>
+                <a href="/2017/mac-battery/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2017/mac-battery/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+            <span class="post-meta-divider">|</span>
+            <span class="post-meta-item-icon"
+            >
+            <i class="fa fa-eye"></i>
+             Views:  
+            <span class="busuanzi-value" id="busuanzi_value_page_pv"></span>
+            </span>
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h2 id="shell-命令获取电池信息"><a href="#shell-命令获取电池信息" class="headerlink" title="shell 命令获取电池信息"></a>shell 命令获取电池信息</h2><p>刚开始使用 macbook pro 后总是查看电池的信息，担心电池衰减快导致续航崩掉 orz，毕竟 macbook 的一个卖点就是续航。后来每次都要打开 system info 切换到 battery 查看，有点麻烦，就产生了一个想法写一个脚本每天自动记录 battery 的最大容量，隔一段时间使用图表画出容量的变化。</p>
+<p>经过一番 google 后，一开始是发现了有 python 的库 <code>psutil</code> 和 <code>power</code> 可以访问系统的信息，但是似乎都得不到想要的电池最大容量这个数据，最后在<a href="https://apple.stackexchange.com/questions/116429/using-bash-terminal-to-get-number-of-battery-recharge-cycles" target="_blank" rel="noopener">这个网站</a>发现了有用的 bash 命令。</p>
+<a id="more"></a>
+<p>笔记本以树形的方式记录了 IO 设备的信息，使用 <code>ioreg</code> 可以查看这些信息</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">ioreg -l -w0 | grep Capacity</span><br><span class="line"></span><br><span class="line">//output</span><br><span class="line">    | |           "MaxCapacity" = 6108</span><br><span class="line">    | |           "CurrentCapacity" = 3288</span><br><span class="line">    | |           "LegacyBatteryInfo" = &#123;"Amperage"=18446744073709550947,"Flags"=4,"Capacity"=6108,"Current"=3288,"Voltage"=11363,"Cycle Count"=38&#125;</span><br><span class="line">    | |           "DesignCapacity" = 6559</span><br></pre></td></tr></table></figure>
+<p>或者</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">system_profiler SPPowerDataType | grep "Cycle Count" | awk '&#123;print $3&#125;'</span><br></pre></td></tr></table></figure>
+<p>这个命令拿到的是循环次数，稍加改造就可以拿到最大电池容量</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">system_profiler SPPowerDataType | grep "Full Charge Capacity" | awk '&#123;print $5&#125;'</span><br></pre></td></tr></table></figure>
+<p>同时 google 下 <code>system_profiler</code> 这个命令，发现这是 macOS 提供的系统信息查询的命令</p>
+<blockquote>
+<p> system_profiler reports on the hardware and software configuration of the system.  It can generate plain text reports or XML reports which can be opened with System Information.app</p>
+</blockquote>
+<p>使用该命令就如同查看 system info，只不过是同图形界面变到了 terminal 上</p>
+<p>既然可以通过这个命令拿到想要的信息，下一步就是如何使用 python 调用这些命令并编写脚本了。</p>
+<h2 id="编写-python-脚本"><a href="#编写-python-脚本" class="headerlink" title="编写 python 脚本"></a>编写 python 脚本</h2><p><a href="https://github.com/AkisAya/batteryinfo" target="_blank" rel="noopener">获取 python 脚本</a></p>
+<p>使用 <code>os.popen()</code> 调用 shell 命令并输出</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">comm = <span class="string">"system_profiler SPPowerDataType | grep 'Full Charge Capacity' | awk '&#123;print $5&#125;'"</span></span><br><span class="line">os.popen(comm).read().strip()</span><br><span class="line"><span class="comment"># output</span></span><br><span class="line"><span class="string">'6075'</span></span><br></pre></td></tr></table></figure>
+<p>为了提取更多有用的信息，可以保存 <code>system_profiler SPPowerDataType</code> 输出的信息，然后使用正则表达式提取我们需要的信息。创建一个类来完成这个任务再好不过了。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> os</span><br><span class="line"><span class="keyword">import</span> re</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Battery</span>:</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__init__</span><span class="params">(self)</span>:</span></span><br><span class="line">        self.power_info = os.popen(<span class="string">"system_profiler SPPowerDataType"</span>).read()</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__get_number_value</span><span class="params">(self, pattern)</span>:</span></span><br><span class="line">        ret = re.search(pattern, self.power_info).group(<span class="number">1</span>)</span><br><span class="line">        <span class="keyword">return</span> int(ret)</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__get_string_value</span><span class="params">(self, pattern)</span>:</span></span><br><span class="line">        <span class="keyword">return</span> re.search(pattern, self.power_info).group().split(<span class="string">":"</span>)[<span class="number">1</span>].strip()</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">max_capacity</span><span class="params">(self)</span>:</span></span><br><span class="line">        <span class="keyword">return</span> self.__get_number_value(<span class="string">r'Full Charge Capacity.*?(\d+)'</span>)</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">current_capacity</span><span class="params">(self)</span>:</span></span><br><span class="line">        <span class="keyword">return</span> self.__get_number_value(<span class="string">r'Charge Remaining.*?(\d+)'</span>)</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">cycle_count</span><span class="params">(self)</span>:</span></span><br><span class="line">        <span class="keyword">return</span> self.__get_number_value(<span class="string">r'Cycle Count.*?(\d+)'</span>)</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">design_capacity</span><span class="params">(self)</span>:</span></span><br><span class="line">        info = os.popen(<span class="string">'ioreg -l -w0 | grep DesignCapacity'</span>).read()</span><br><span class="line">        <span class="keyword">return</span> int(info.split(<span class="string">"="</span>)[<span class="number">1</span>].strip())</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">percentage</span><span class="params">(self)</span>:</span></span><br><span class="line">        <span class="keyword">return</span> int(self.current_capacity()/self.max_capacity() * <span class="number">100</span>)</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">battery_health</span><span class="params">(self)</span>:</span></span><br><span class="line">        <span class="keyword">return</span> int(self.max_capacity() / self.design_capacity() * <span class="number">100</span>)</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">battery_condition</span><span class="params">(self)</span>:</span></span><br><span class="line">        <span class="keyword">return</span> self.__get_string_value(<span class="string">r'Condition.*'</span>)</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">is_charging</span><span class="params">(self)</span>:</span></span><br><span class="line">        status = self.__get_string_value(<span class="string">r'Charging.*'</span>)</span><br><span class="line">        <span class="keyword">if</span> status == <span class="string">'No'</span>:</span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">False</span></span><br><span class="line">        <span class="keyword">else</span>:</span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">True</span></span><br></pre></td></tr></table></figure>
+<p>由于 <code>system_profiler SPPowerDataType</code> 输出的信息本身就是格式化的，所以要进一步优化这个方案的话可以直接解析输出信息构造出一个树，使用 json 格式来存放信息或者使用 dict 来存放信息</p>
+<h3 id="其他"><a href="#其他" class="headerlink" title="其他"></a>其他</h3><p>在使用 python 的 re 模块时发现，在匹配字符串的时候最多只会匹配到一行的末尾。比如：</p>
+<p>对于字符串</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">Charge Remaining (mAh): 5268</span><br><span class="line">Fully Charged: No</span><br><span class="line">Charging: No</span><br><span class="line">Full Charge Capacity (mAh): 6097</span><br></pre></td></tr></table></figure>
+<p>当我们使用 <code>re.search(r&#39;Charging.*&#39;)</code> 时，会匹配到 <code>Charging: No</code> 这一行，但是也不会跨行</p>
+<h2 id="macOS-定时任务"><a href="#macOS-定时任务" class="headerlink" title="macOS 定时任务"></a>macOS 定时任务</h2><p>前面已经写了基本的类获取电池信息，现在就写个定时任务每天执行任务记录电池信息，数据够多后画出来看看电池的变化吧。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># output_battery_info.py</span></span><br><span class="line"><span class="keyword">from</span> battery_info <span class="keyword">import</span> Battery</span><br><span class="line"><span class="keyword">import</span> datetime</span><br><span class="line"></span><br><span class="line">batt = Battery()</span><br><span class="line">path = <span class="string">'/Users/akis/Documents/battery/info.txt'</span></span><br><span class="line"><span class="keyword">with</span> open(path, <span class="string">'a'</span>) <span class="keyword">as</span> file:</span><br><span class="line">    logtime = datetime.datetime.now().strftime(<span class="string">"%Y-%m-%d"</span>)</span><br><span class="line">    line = <span class="string">'&#123;0&#125;\t&#123;1&#125;\t&#123;2&#125;\n'</span>.format(logtime, batt.max_capacity(), batt.cycle_count())</span><br><span class="line">    file.write(line)</span><br></pre></td></tr></table></figure>
+<p>剩下的就是使用 mac 的 launchctl 定时执行脚本了</p>
+<p>launchctl 的使用参见 <a href="http://blog.csdn.net/u012390519/article/details/74542042" target="_blank" rel="noopener">Mac执行定时任务之Launchctl</a></p>
+<p>定义一个可执行文件 <code>logBatteryInfo.sh</code> 如下</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#!/bin/sh</span></span><br><span class="line">/usr/<span class="built_in">local</span>/bin/python3 /Users/akis/codespace/python/batteryinfo/output_battery_info.py</span><br></pre></td></tr></table></figure>
+<p>自定义任务列表 <code>me.battery.launchctl.plist</code> </p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;</span><br><span class="line">&lt;!DOCTYPE plist PUBLIC &quot;-//Apple//DTD PLIST 1.0//EN&quot; &quot;http://www.apple.com/DTDs/PropertyList-1.0.dtd&quot;&gt;</span><br><span class="line">&lt;plist version=&quot;1.0&quot;&gt;</span><br><span class="line">  &lt;dict&gt;</span><br><span class="line">    &lt;key&gt;Label&lt;/key&gt;</span><br><span class="line">    &lt;string&gt;me.battery.launchctl.plist&lt;/string&gt;</span><br><span class="line">    &lt;key&gt;ProgramArguments&lt;/key&gt;</span><br><span class="line">    &lt;array&gt;</span><br><span class="line">      &lt;string&gt;/Users/akis/Documents/battery/logBatteryInfo.sh&lt;/string&gt;</span><br><span class="line">    &lt;/array&gt;</span><br><span class="line">    &lt;key&gt;StartCalendarInterval&lt;/key&gt;</span><br><span class="line">    &lt;dict&gt;</span><br><span class="line">          &lt;key&gt;Minute&lt;/key&gt;</span><br><span class="line">          &lt;integer&gt;20&lt;/integer&gt;</span><br><span class="line">          &lt;key&gt;Hour&lt;/key&gt;</span><br><span class="line">          &lt;integer&gt;23&lt;/integer&gt;</span><br><span class="line">    &lt;/dict&gt;</span><br><span class="line">    &lt;key&gt;StandardOutPath&lt;/key&gt;</span><br><span class="line">      &lt;string&gt;/Users/akis/Documents/battery/logBatteryInfo.log&lt;/string&gt;</span><br><span class="line">    &lt;key&gt;StandardErrorPath&lt;/key&gt;</span><br><span class="line">    &lt;string&gt;/Users/akis/Documents/battery/logBatteryInfo.err&lt;/string&gt;</span><br><span class="line">  &lt;/dict&gt;</span><br><span class="line">&lt;/plist&gt;</span><br></pre></td></tr></table></figure>
+
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+      
+    
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/python/" rel="tag"># python</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2017/Hadoop-单机配置/" rel="next" title="Hadoop 单机配置">
+                <i class="fa fa-chevron-left"></i> Hadoop 单机配置
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2018/使用Travis-CI-自动化部署-hexo-博客/" rel="prev" title="使用 Travis CI 自动化部署 hexo 博客的碎碎念">
+                使用 Travis CI 自动化部署 hexo 博客的碎碎念 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+  </div>
+
+
+          </div>
+          
+
+  
+    <div class="comments" id="comments">
+      <div id="disqus_thread">
+        <noscript>Please enable JavaScript to view the comments powered by Disqus.</noscript>
+      </div>
+    </div>
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image"
+                src="/uploads/avatar.jpg"
+                alt="Akisaya"/>
+            
+              <p class="site-author-name" itemprop="name">Akisaya</p>
+              <div class="site-description motion-element" itemprop="description">Take A Leap of Faith</div>
+          </div>
+
+          
+            <nav class="site-state motion-element">
+              
+                <div class="site-state-item site-state-posts">
+                
+                  <a href="/archives/">
+                
+                    <span class="site-state-item-count">12</span>
+                    <span class="site-state-item-name">posts</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-categories">
+                  
+                    
+                      <a href="/categories/">
+                    
+                  
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">5</span>
+                    <span class="site-state-item-name">categories</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-tags">
+                  
+                    
+                      <a href="/tags/">
+                    
+                  
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">19</span>
+                    <span class="site-state-item-name">tags</span>
+                  </a>
+                </div>
+              
+            </nav>
+          
+
+          
+
+          
+
+          
+            <div class="links-of-author motion-element">
+              
+                <span class="links-of-author-item">
+                  
+                  
+                    
+                  
+                  
+                    
+                  
+                  <a href="https://github.com/akisaya" title="GitHub &rarr; https://github.com/akisaya" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+                </span>
+              
+                <span class="links-of-author-item">
+                  
+                  
+                    
+                  
+                  
+                    
+                  
+                  <a href="mailto:akisaya@foxmail.com" title="E-Mail &rarr; mailto:akisaya@foxmail.com" rel="noopener" target="_blank"><i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                </span>
+              
+            </div>
+          
+
+          
+
+          
+          
+
+          
+            
+          
+          
+
+        </div>
+      </div>
+
+      
+      <!--noindex-->
+        <div class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+            
+            
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#shell-命令获取电池信息"><span class="nav-number">1.</span> <span class="nav-text">shell 命令获取电池信息</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#编写-python-脚本"><span class="nav-number">2.</span> <span class="nav-text">编写 python 脚本</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#其他"><span class="nav-number">2.1.</span> <span class="nav-text">其他</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#macOS-定时任务"><span class="nav-number">3.</span> <span class="nav-text">macOS 定时任务</span></a></li></ol></div>
+            
+
+          </div>
+        </div>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+  
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2020</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Akisaya</span>
+
+  
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> v3.7.1</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme – <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> v7.1.1</div>
+
+
+
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  
+    <span class="post-meta-item-icon">
+      <i class="fa fa-user"></i>
+    </span>
+    <span class="site-uv" title="Total Visitors">
+      <span class="busuanzi-value" id="busuanzi_value_site_uv"></span>
+    </span>
+  
+
+  
+    <span class="post-meta-divider">|</span>
+  
+
+  
+    <span class="post-meta-item-icon">
+      <i class="fa fa-eye"></i>
+    </span>
+    <span class="site-pv" title="Total Views">
+      <span class="busuanzi-value" id="busuanzi_value_site_pv"></span>
+    </span>
+  
+</div>
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+    
+
+    
+  </div>
+
+  
+
+<script>
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+
+  
+
+
+  <script src="/js/utils.js?v=7.1.1"></script>
+
+  <script src="/js/motion.js?v=7.1.1"></script>
+
+
+
+  
+  
+
+
+  <script src="/js/affix.js?v=7.1.1"></script>
+
+  <script src="/js/schemes/pisces.js?v=7.1.1"></script>
+
+
+
+  
+  <script src="/js/scrollspy.js?v=7.1.1"></script>
+<script src="/js/post-details.js?v=7.1.1"></script>
+
+
+
+  
+
+
+  <script src="/js/next-boot.js?v=7.1.1"></script>
+
+
+  
+
+  
+
+  
+
+  
+  
+  <script id="dsq-count-scr" src="https://akisaya.disqus.com/count.js" async></script>
+
+
+<script>
+  var disqus_config = function() {
+    this.page.url = "https://akisaya.github.io/2017/mac-battery/";
+    this.page.identifier = "2017/mac-battery/";
+    this.page.title = '使用脚本查看 macOS 电池信息';
+    };
+  function loadComments() {
+    var d = document, s = d.createElement('script');
+    s.src = 'https://akisaya.disqus.com/embed.js';
+    s.setAttribute('data-timestamp', '' + +new Date());
+    (d.head || d.body).appendChild(s);
+  }
+  
+    loadComments();
+  
+</script>
+
+
+
+
+
+  
+
+
+  
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+  <script>
+    (function(){
+      var bp = document.createElement('script');
+      var curProtocol = window.location.protocol.split(':')[0];
+      bp.src = (curProtocol === 'https') ? 'https://zz.bdstatic.com/linksubmit/push.js' : 'http://push.zhanzhang.baidu.com/push.js';
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(bp, s);
+    })();
+  </script>
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+<script>
+  $('.highlight').not('.gist .highlight').each(function(i, e) {
+    var $wrap = $('<div>').addClass('highlight-wrap');
+    $(e).after($wrap);
+    $wrap.append($('<button>').addClass('copy-btn').append('Copy').on('click', function(e) {
+      var code = $(this).parent().find('.code').find('.line').map(function(i, e) {
+        return $(e).text();
+      }).toArray().join('\n');
+      var ta = document.createElement('textarea');
+      var yPosition = window.pageYOffset || document.documentElement.scrollTop;
+      ta.style.top = yPosition + 'px'; // Prevent page scroll
+      ta.style.position = 'absolute';
+      ta.style.opacity = '0';
+      ta.readOnly = true;
+      ta.value = code;
+      document.body.appendChild(ta);
+      ta.select();
+      ta.setSelectionRange(0, code.length);
+      ta.readOnly = false;
+      var result = document.execCommand('copy');
+      
+        if (result) $(this).text('Copied');
+        else $(this).text('Copy failed');
+      
+      ta.blur(); // For iOS
+      $(this).blur();
+    })).on('mouseleave', function(e) {
+      var $b = $(this).find('.copy-btn');
+      setTimeout(function() {
+        $b.text('Copy');
+      }, 300);
+    }).append(e);
+  })
+</script>
+
+
+  
+
+  
+
+</body>
+</html>

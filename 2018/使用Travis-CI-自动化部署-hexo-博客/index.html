@@ -1,0 +1,1035 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<html class="theme-next pisces" lang="zh_CN">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2"/>
+<meta name="theme-color" content="#222"/>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2"/>
+
+<link rel="stylesheet" href="/css/main.css?v=7.1.1"/>
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=7.1.1">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=7.1.1">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=7.1.1">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=7.1.1" color="#222">
+
+
+
+
+
+
+
+<script id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '7.1.1',
+    sidebar: {"position":"left","display":"post","b2t":true},
+    back2top: true,
+    back2top_sidebar: false,
+    fancybox: false,
+    fastclick: false,
+    lazyload: false,
+    tabs: true,
+    motion: {"enable":false},
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+  
+
+
+
+
+  <meta name="description" content="偶然点进去同事的博客，看到了使用 Travis CI 自动化部署 hexo 博客的文章，突然有点手痒了。从电脑角落里翻出来以前 hexo 的博客，发现只有寥寥两篇，而且最近的一篇还是过年的时候，这时候真觉得自己又开始部署 hexo 只是为了打发时间，某天又想起这个博客的时候最新的怕还是这篇自动化部署的碎碎念。不过，生命在于折腾，这便开始吧。">
+<meta name="keywords" content="hexo">
+<meta property="og:type" content="article">
+<meta property="og:title" content="使用 Travis CI 自动化部署 hexo 博客的碎碎念">
+<meta property="og:url" content="https://akisaya.github.io/2018/使用Travis-CI-自动化部署-hexo-博客/index.html">
+<meta property="og:site_name" content="Inspiration">
+<meta property="og:description" content="偶然点进去同事的博客，看到了使用 Travis CI 自动化部署 hexo 博客的文章，突然有点手痒了。从电脑角落里翻出来以前 hexo 的博客，发现只有寥寥两篇，而且最近的一篇还是过年的时候，这时候真觉得自己又开始部署 hexo 只是为了打发时间，某天又想起这个博客的时候最新的怕还是这篇自动化部署的碎碎念。不过，生命在于折腾，这便开始吧。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://akisaya.github.io/2018/使用Travis-CI-自动化部署-hexo-博客/travis_dashboard.png">
+<meta property="og:image" content="https://akisaya.github.io/2018/使用Travis-CI-自动化部署-hexo-博客/repo_token.png">
+<meta property="og:image" content="https://akisaya.github.io/2018/使用Travis-CI-自动化部署-hexo-博客/env.png">
+<meta property="og:updated_time" content="2020-04-01T17:40:11.495Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="使用 Travis CI 自动化部署 hexo 博客的碎碎念">
+<meta name="twitter:description" content="偶然点进去同事的博客，看到了使用 Travis CI 自动化部署 hexo 博客的文章，突然有点手痒了。从电脑角落里翻出来以前 hexo 的博客，发现只有寥寥两篇，而且最近的一篇还是过年的时候，这时候真觉得自己又开始部署 hexo 只是为了打发时间，某天又想起这个博客的时候最新的怕还是这篇自动化部署的碎碎念。不过，生命在于折腾，这便开始吧。">
+<meta name="twitter:image" content="https://akisaya.github.io/2018/使用Travis-CI-自动化部署-hexo-博客/travis_dashboard.png">
+
+
+
+
+
+  
+  
+  <link rel="canonical" href="https://akisaya.github.io/2018/使用Travis-CI-自动化部署-hexo-博客/"/>
+
+
+
+<script id="page.configurations">
+  CONFIG.page = {
+    sidebar: "",
+  };
+</script>
+
+  <title>使用 Travis CI 自动化部署 hexo 博客的碎碎念 | Inspiration</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .motion-element,
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-title { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh_CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Inspiration</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+    
+    
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="Toggle navigation bar">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  
+    <ul id="menu" class="menu">
+      
+        
+        
+        
+          
+          <li class="menu-item menu-item-home">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br/>Home</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-about">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/about/" rel="section"><i class="menu-item-icon fa fa-fw fa-user"></i> <br/>About</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-tags">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/tags/" rel="section"><i class="menu-item-icon fa fa-fw fa-tags"></i> <br/>Tags</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-categories">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br/>Categories</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-archives">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br/>Archives</a>
+
+  </li>
+
+      
+      
+    </ul>
+  
+
+  
+
+  
+</nav>
+
+
+
+  
+
+
+
+</div>
+    </header>
+
+    
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+            
+
+          
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://akisaya.github.io/2018/使用Travis-CI-自动化部署-hexo-博客/"/>
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Akisaya"/>
+      <meta itemprop="description" content="Take A Leap of Faith"/>
+      <meta itemprop="image" content="/uploads/avatar.jpg"/>
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Inspiration"/>
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h2 class="post-title" itemprop="name headline">使用 Travis CI 自动化部署 hexo 博客的碎碎念
+
+              
+            
+          </h2>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+
+              
+                
+              
+
+              <time title="Created: 2018-09-13 17:04:04" itemprop="dateCreated datePublished" datetime="2018-09-13T17:04:04+08:00">2018-09-13</time>
+            
+
+            
+              
+
+              
+                
+                <span class="post-meta-divider">|</span>
+                
+
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">Edited on</span>
+                
+                <time title="Modified: 2020-04-02 01:40:11" itemprop="dateModified" datetime="2020-04-02T01:40:11+08:00">2020-04-02</time>
+              
+            
+          </span>
+
+          
+
+          
+            
+            
+              
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+            
+                <span class="post-meta-item-text">Comments: </span>
+                <a href="/2018/使用Travis-CI-自动化部署-hexo-博客/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2018/使用Travis-CI-自动化部署-hexo-博客/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+            <span class="post-meta-divider">|</span>
+            <span class="post-meta-item-icon"
+            >
+            <i class="fa fa-eye"></i>
+             Views:  
+            <span class="busuanzi-value" id="busuanzi_value_page_pv"></span>
+            </span>
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>偶然点进去同事的博客，看到了使用 Travis CI 自动化部署 hexo 博客的文章，突然有点手痒了。从电脑角落里翻出来以前 hexo 的博客，发现只有寥寥两篇，而且最近的一篇还是过年的时候，这时候真觉得自己又开始部署 hexo 只是为了打发时间，某天又想起这个博客的时候最新的怕还是这篇自动化部署的碎碎念。不过，生命在于折腾，这便开始吧。<br><a id="more"></a></p>
+<h2 id="什么是-Travis-CI"><a href="#什么是-Travis-CI" class="headerlink" title="什么是 Travis CI"></a>什么是 Travis CI</h2><p>CI 即持续集成（Continuous Integration），CI 主要是针对开发中的频繁迭代的代码更新，做自动化的构建和测试工作，及时发现代码中的bug，<a href="https://travis-ci.org/" target="_blank" rel="noopener">Travis CI</a> 就是提供这种持续集成能力的服务。</p>
+<p>Travis CI 跟 Github 是绑定在一起的，使用 github 账号登录 Travis CI 后能看到 repos，勾选相应的 repo 后，它能够自动检测 其中某个分支上的 commit，然后拉取仓库中的代码, 基于 <code>.travis.yml</code> 中的配置运行定制化的命令。因为我们的 hexo 博客就是在根目录下运行 <code>hexo g -d</code>，然后将编译完成的静态文件 push 到 github master 分支，所以我们自然可以通过将 hexo 博客的源码保存在 github 分支上，让 Travis CI 监测这个分支，每当有 commit 的时候，就自动拉取该分支然后编译<br><img src="./travis_dashboard.png" alt=""></p>
+<h2 id="自动化部署"><a href="#自动化部署" class="headerlink" title="自动化部署"></a>自动化部署</h2><p>Travis CI 官网本身提供了一个部署文件到 github pages 的<a href="https://docs.travis-ci.com/user/deployment/pages/" target="_blank" rel="noopener">最小化配置</a><br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">deploy:</span><br><span class="line">  provider: pages</span><br><span class="line">  skip-cleanup: true</span><br><span class="line">  github-token: $GITHUB_TOKEN  # Set in the settings page of your repository, as a secure variable</span><br><span class="line">  keep-history: true</span><br><span class="line">  on:</span><br><span class="line">    branch: master</span><br></pre></td></tr></table></figure></p>
+<p>我们只有基于这个配置添加 hexo 相关的必要步骤就行</p>
+<p><code>github-token</code> 的作用是为了让我们有权限将编译后的静态文件有权限推回 github，我们需要在 github 的 <a href="https://github.com/settings/tokens" target="_blank" rel="noopener">personal access token</a> 里设置，该 token 权限应该尽量小，对于我们自动自动化部署博客这个场景来说，只需要勾选 public_repo 就行了。<br><img src="./repo_token.png" alt=""><br>复制后生成的 token，在设置面板里添加环境变量<br><img src="./env.png" alt=""></p>
+<p>启用 Travis CI 这一部我们就做好了，剩下就是配置好 <code>.travis.yml</code><br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">language: node_js #指定环境为 Node.js</span><br><span class="line"></span><br><span class="line">node_js:</span><br><span class="line">- &quot;6.0.0&quot;</span><br><span class="line"></span><br><span class="line">before_install:</span><br><span class="line">- export TZ=&apos;Asia/Shanghai&apos; #设置时区 非必须</span><br><span class="line"></span><br><span class="line">script:</span><br><span class="line">- hexo generate #生成博客</span><br><span class="line"></span><br><span class="line">deploy:</span><br><span class="line">  provider: pages</span><br><span class="line">  skip_cleanup: true</span><br><span class="line">  github_token: $GITHUB_TOKEN</span><br><span class="line">  local_dir: public</span><br><span class="line">  repo: AkisAya/akisaya.github.io</span><br><span class="line">  target_branch: master</span><br><span class="line">  on:</span><br><span class="line">    branch: source</span><br></pre></td></tr></table></figure></p>
+<p>配置文件也很简单，<code>branch: source</code> 指的是监控 repo 上的 source 分支，我们的博客源码就是保存在该分支上，<code>local_dir</code> 指的是要推送的文件夹，hexo 编译完成后生成的静态文件就是在 <code>public</code> 文件夹里，<code>repo</code> 就是推送的 github repo，默认是当前 repo，命名规则是 <code>username/repo-name</code>, <code>target_branch</code> 是我们要推送到的分支。将这个配置文件放在 博客源码目录，一起推送到 github 上就行了。</p>
+<h2 id="踩坑"><a href="#踩坑" class="headerlink" title="踩坑"></a>踩坑</h2><p>推送源码到 github 的 source 分支上意味着我们的根目录就是 git 的 repo，但是同时，themes 下的主题也是一个 git 的 repo，所以两者之间是构成了 submodule 的关系，如果 root repo 没有添加这个 submodule 的话，push 的时候没有把 themes 下的文件也 push 上去，结果造成 Travis 构建的时候没有样式模板生成静态文件。</p>
+<p>用 <code>git submodule add https://github.com/AkisAya/hexo-theme-next.git themes/next</code> 添加了 submodule 再推送，发现在 github 里 source 分支下的 themes/next 实质上是一个超链接，链到刚才指定的仓库，这个时候 travis 构建的时候就会分别从我们的 source 分支和主题对应的分支拉取代码。但是这个时时候回出现什么问题呢，由于本地主题我们其实是有修改的，可能导致 source 分支上的 主题分支的 commit id 与 主题仓库的 commit id 不一致，然后 travis 拉取主题代码的时候就会失败。后来我直接把主题的源仓库 fork 了一份，添加 submodule 的时候关联到我 fork 的这个仓库，使 submodule 的 commit id 与 源仓库的 commit id 保持一致算是暂时解决了这个问题。</p>
+<h2 id="结语"><a href="#结语" class="headerlink" title="结语"></a>结语</h2><p>折腾完了，最后我也不想搞 Travis CI 自动部署了。其实最后会发现，Travis CI 并没有减少什么部署步骤。<br>在本地编译部署你只需要<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">hexo new post &quot;xxx.md&quot;</span><br><span class="line">hexo g -d</span><br></pre></td></tr></table></figure></p>
+<p>使用 Travis CI 的话你需要<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">git add xxx</span><br><span class="line">git commit -m &quot;xxx&quot;</span><br></pre></td></tr></table></figure></p>
+<p>你看，其实并没有减少什么工作量，反而是如果以后想要更新主题的话，本地拉取更新感觉更方便。也可能是我的使用姿势不对吧。<br>不过，博客源码倒是在 github 保存了一份，不用担心丢失，或者有多台电脑写博客的需求的话，checkout 分支然后 commit 确实方便很多了</p>
+
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+      
+    
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/hexo/" rel="tag"># hexo</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2017/mac-battery/" rel="next" title="使用脚本查看 macOS 电池信息">
+                <i class="fa fa-chevron-left"></i> 使用脚本查看 macOS 电池信息
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2018/Maven打包项目二三事/" rel="prev" title="Maven打包项目二三事">
+                Maven打包项目二三事 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+  </div>
+
+
+          </div>
+          
+
+  
+    <div class="comments" id="comments">
+      <div id="disqus_thread">
+        <noscript>Please enable JavaScript to view the comments powered by Disqus.</noscript>
+      </div>
+    </div>
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image"
+                src="/uploads/avatar.jpg"
+                alt="Akisaya"/>
+            
+              <p class="site-author-name" itemprop="name">Akisaya</p>
+              <div class="site-description motion-element" itemprop="description">Take A Leap of Faith</div>
+          </div>
+
+          
+            <nav class="site-state motion-element">
+              
+                <div class="site-state-item site-state-posts">
+                
+                  <a href="/archives/">
+                
+                    <span class="site-state-item-count">12</span>
+                    <span class="site-state-item-name">posts</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-categories">
+                  
+                    
+                      <a href="/categories/">
+                    
+                  
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">5</span>
+                    <span class="site-state-item-name">categories</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-tags">
+                  
+                    
+                      <a href="/tags/">
+                    
+                  
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">19</span>
+                    <span class="site-state-item-name">tags</span>
+                  </a>
+                </div>
+              
+            </nav>
+          
+
+          
+
+          
+
+          
+            <div class="links-of-author motion-element">
+              
+                <span class="links-of-author-item">
+                  
+                  
+                    
+                  
+                  
+                    
+                  
+                  <a href="https://github.com/akisaya" title="GitHub &rarr; https://github.com/akisaya" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+                </span>
+              
+                <span class="links-of-author-item">
+                  
+                  
+                    
+                  
+                  
+                    
+                  
+                  <a href="mailto:akisaya@foxmail.com" title="E-Mail &rarr; mailto:akisaya@foxmail.com" rel="noopener" target="_blank"><i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                </span>
+              
+            </div>
+          
+
+          
+
+          
+          
+
+          
+            
+          
+          
+
+        </div>
+      </div>
+
+      
+      <!--noindex-->
+        <div class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+            
+            
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#什么是-Travis-CI"><span class="nav-number">1.</span> <span class="nav-text">什么是 Travis CI</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#自动化部署"><span class="nav-number">2.</span> <span class="nav-text">自动化部署</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#踩坑"><span class="nav-number">3.</span> <span class="nav-text">踩坑</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#结语"><span class="nav-number">4.</span> <span class="nav-text">结语</span></a></li></ol></div>
+            
+
+          </div>
+        </div>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+  
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2020</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Akisaya</span>
+
+  
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> v3.7.1</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme – <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> v7.1.1</div>
+
+
+
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  
+    <span class="post-meta-item-icon">
+      <i class="fa fa-user"></i>
+    </span>
+    <span class="site-uv" title="Total Visitors">
+      <span class="busuanzi-value" id="busuanzi_value_site_uv"></span>
+    </span>
+  
+
+  
+    <span class="post-meta-divider">|</span>
+  
+
+  
+    <span class="post-meta-item-icon">
+      <i class="fa fa-eye"></i>
+    </span>
+    <span class="site-pv" title="Total Views">
+      <span class="busuanzi-value" id="busuanzi_value_site_pv"></span>
+    </span>
+  
+</div>
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+    
+
+    
+  </div>
+
+  
+
+<script>
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+
+  
+
+
+  <script src="/js/utils.js?v=7.1.1"></script>
+
+  <script src="/js/motion.js?v=7.1.1"></script>
+
+
+
+  
+  
+
+
+  <script src="/js/affix.js?v=7.1.1"></script>
+
+  <script src="/js/schemes/pisces.js?v=7.1.1"></script>
+
+
+
+  
+  <script src="/js/scrollspy.js?v=7.1.1"></script>
+<script src="/js/post-details.js?v=7.1.1"></script>
+
+
+
+  
+
+
+  <script src="/js/next-boot.js?v=7.1.1"></script>
+
+
+  
+
+  
+
+  
+
+  
+  
+  <script id="dsq-count-scr" src="https://akisaya.disqus.com/count.js" async></script>
+
+
+<script>
+  var disqus_config = function() {
+    this.page.url = "https://akisaya.github.io/2018/使用Travis-CI-自动化部署-hexo-博客/";
+    this.page.identifier = "2018/使用Travis-CI-自动化部署-hexo-博客/";
+    this.page.title = '使用 Travis CI 自动化部署 hexo 博客的碎碎念';
+    };
+  function loadComments() {
+    var d = document, s = d.createElement('script');
+    s.src = 'https://akisaya.disqus.com/embed.js';
+    s.setAttribute('data-timestamp', '' + +new Date());
+    (d.head || d.body).appendChild(s);
+  }
+  
+    loadComments();
+  
+</script>
+
+
+
+
+
+  
+
+
+  
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+  <script>
+    (function(){
+      var bp = document.createElement('script');
+      var curProtocol = window.location.protocol.split(':')[0];
+      bp.src = (curProtocol === 'https') ? 'https://zz.bdstatic.com/linksubmit/push.js' : 'http://push.zhanzhang.baidu.com/push.js';
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(bp, s);
+    })();
+  </script>
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+<script>
+  $('.highlight').not('.gist .highlight').each(function(i, e) {
+    var $wrap = $('<div>').addClass('highlight-wrap');
+    $(e).after($wrap);
+    $wrap.append($('<button>').addClass('copy-btn').append('Copy').on('click', function(e) {
+      var code = $(this).parent().find('.code').find('.line').map(function(i, e) {
+        return $(e).text();
+      }).toArray().join('\n');
+      var ta = document.createElement('textarea');
+      var yPosition = window.pageYOffset || document.documentElement.scrollTop;
+      ta.style.top = yPosition + 'px'; // Prevent page scroll
+      ta.style.position = 'absolute';
+      ta.style.opacity = '0';
+      ta.readOnly = true;
+      ta.value = code;
+      document.body.appendChild(ta);
+      ta.select();
+      ta.setSelectionRange(0, code.length);
+      ta.readOnly = false;
+      var result = document.execCommand('copy');
+      
+        if (result) $(this).text('Copied');
+        else $(this).text('Copy failed');
+      
+      ta.blur(); // For iOS
+      $(this).blur();
+    })).on('mouseleave', function(e) {
+      var $b = $(this).find('.copy-btn');
+      setTimeout(function() {
+        $b.text('Copy');
+      }, 300);
+    }).append(e);
+  })
+</script>
+
+
+  
+
+  
+
+</body>
+</html>

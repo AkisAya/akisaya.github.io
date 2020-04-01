@@ -1,0 +1,1059 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<html class="theme-next pisces" lang="zh_CN">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2"/>
+<meta name="theme-color" content="#222"/>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2"/>
+
+<link rel="stylesheet" href="/css/main.css?v=7.1.1"/>
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=7.1.1">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=7.1.1">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=7.1.1">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=7.1.1" color="#222">
+
+
+
+
+
+
+
+<script id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '7.1.1',
+    sidebar: {"position":"left","display":"post","b2t":true},
+    back2top: true,
+    back2top_sidebar: false,
+    fancybox: false,
+    fastclick: false,
+    lazyload: false,
+    tabs: true,
+    motion: {"enable":false},
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+  
+
+
+
+
+  <meta name="description" content="1 前置安装程序1.1 安装 JDK参考 安装 JDK 的两种方式 1.2 安装 SSH在 Ubuntu 环境下，首先安装 SSH">
+<meta name="keywords" content="Hadoop">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Hadoop 单机配置">
+<meta property="og:url" content="https://akisaya.github.io/2017/Hadoop-单机配置/index.html">
+<meta property="og:site_name" content="Inspiration">
+<meta property="og:description" content="1 前置安装程序1.1 安装 JDK参考 安装 JDK 的两种方式 1.2 安装 SSH在 Ubuntu 环境下，首先安装 SSH">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:updated_time" content="2020-04-01T17:40:11.491Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Hadoop 单机配置">
+<meta name="twitter:description" content="1 前置安装程序1.1 安装 JDK参考 安装 JDK 的两种方式 1.2 安装 SSH在 Ubuntu 环境下，首先安装 SSH">
+
+
+
+
+
+  
+  
+  <link rel="canonical" href="https://akisaya.github.io/2017/Hadoop-单机配置/"/>
+
+
+
+<script id="page.configurations">
+  CONFIG.page = {
+    sidebar: "",
+  };
+</script>
+
+  <title>Hadoop 单机配置 | Inspiration</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .motion-element,
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-title { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh_CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Inspiration</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+    
+    
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="Toggle navigation bar">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  
+    <ul id="menu" class="menu">
+      
+        
+        
+        
+          
+          <li class="menu-item menu-item-home">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br/>Home</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-about">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/about/" rel="section"><i class="menu-item-icon fa fa-fw fa-user"></i> <br/>About</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-tags">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/tags/" rel="section"><i class="menu-item-icon fa fa-fw fa-tags"></i> <br/>Tags</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-categories">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br/>Categories</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-archives">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br/>Archives</a>
+
+  </li>
+
+      
+      
+    </ul>
+  
+
+  
+
+  
+</nav>
+
+
+
+  
+
+
+
+</div>
+    </header>
+
+    
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+            
+
+          
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://akisaya.github.io/2017/Hadoop-单机配置/"/>
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Akisaya"/>
+      <meta itemprop="description" content="Take A Leap of Faith"/>
+      <meta itemprop="image" content="/uploads/avatar.jpg"/>
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Inspiration"/>
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h2 class="post-title" itemprop="name headline">Hadoop 单机配置
+
+              
+            
+          </h2>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+
+              
+                
+              
+
+              <time title="Created: 2017-12-02 21:51:01" itemprop="dateCreated datePublished" datetime="2017-12-02T21:51:01+08:00">2017-12-02</time>
+            
+
+            
+              
+
+              
+                
+                <span class="post-meta-divider">|</span>
+                
+
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">Edited on</span>
+                
+                <time title="Modified: 2020-04-02 01:40:11" itemprop="dateModified" datetime="2020-04-02T01:40:11+08:00">2020-04-02</time>
+              
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/大数据/" itemprop="url" rel="index"><span itemprop="name">大数据</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+            
+              
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+            
+                <span class="post-meta-item-text">Comments: </span>
+                <a href="/2017/Hadoop-单机配置/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2017/Hadoop-单机配置/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+            <span class="post-meta-divider">|</span>
+            <span class="post-meta-item-icon"
+            >
+            <i class="fa fa-eye"></i>
+             Views:  
+            <span class="busuanzi-value" id="busuanzi_value_page_pv"></span>
+            </span>
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h2 id="1-前置安装程序"><a href="#1-前置安装程序" class="headerlink" title="1 前置安装程序"></a>1 前置安装程序</h2><h3 id="1-1-安装-JDK"><a href="#1-1-安装-JDK" class="headerlink" title="1.1 安装 JDK"></a>1.1 安装 JDK</h3><p>参考 <a href="https://www.cnblogs.com/a2211009/p/4265225.html" target="_blank" rel="noopener">安装 JDK 的两种方式</a></p>
+<h3 id="1-2-安装-SSH"><a href="#1-2-安装-SSH" class="headerlink" title="1.2 安装 SSH"></a>1.2 安装 SSH</h3><p>在 Ubuntu 环境下，首先安装 SSH<br><a id="more"></a><br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ sudo apt-get install ssh</span><br></pre></td></tr></table></figure></p>
+<p>然后配置免密码登录本机节点<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">$ ssh-keygen -t rsa -P &apos;&apos; -f ~/.ssh/id_rsa</span><br><span class="line">$ cat ~/.ssh/id_rsa.pub &gt;&gt; ~/.ssh/authorized_keys</span><br><span class="line">$ chmod 0600 ~/.ssh/authorized_keyss</span><br><span class="line">$ ssh localhost</span><br></pre></td></tr></table></figure></p>
+<h2 id="2-安装配置-Hadoop"><a href="#2-安装配置-Hadoop" class="headerlink" title="2 安装配置 Hadoop"></a>2 安装配置 Hadoop</h2><p>在官网下载 Hadoop 安装包并解压，本文以 Hadoop-2.8.2 为例，Hadoop 从 1.x 到 2.x 后解压后的包结构有所变化，1.x 中 <code>conf</code> 文件夹在 2.x 中已不在，在 2.x 中配置文件存放在了 <code>etc/hadoop</code> 中。</p>
+<p>为了后续方便调用 Hadoop 的命令，添加相应的环境变量，在 <code>~/.bashrc</code> 中最后添加上<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">export HADOOP_HOME=~/program/hadoop2   # hadoop 的解压后存放路径</span><br><span class="line">export PATH=$PATH:$HADOOP_HOME/bin:$HADOOP_HOME/sbin</span><br></pre></td></tr></table></figure></p>
+<p>在单节点的 Hadoop 配置中包含默认<strong>单机模式(Standalone Operation)</strong>和<strong>伪分布式模式(Pseudo-Distributed Operation)</strong></p>
+<h3 id="2-1-单机模式-Standalone-Operation"><a href="#2-1-单机模式-Standalone-Operation" class="headerlink" title="2.1 单机模式 - Standalone Operation"></a>2.1 单机模式 - Standalone Operation</h3><p>hadoop 压缩包解压后无需任何配置，该方式可以用来调试<br>hadoop 安装包中自带了 example 可以用来测试，在 2.x 版本中该示例存放在 <code>hadoop/share/hadoop/mapreduce/hadoop-mapreduce-examples-2.x.x.jar</code><br>在单机模式下，没有使用到 hadoop 的 hdfs 系统，输入数据和输出数据都是存放在本机上，可以直接用本机上的数据进行测试。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">$ mkdir input</span><br><span class="line">$ echo &quot;hello world hello python hello java bye java bye bye&quot; &gt; file</span><br><span class="line">$ mv file input </span><br><span class="line">$ hadoop jar  program/hadoop2/share/hadoop/mapreduce/hadoop-mapreduce-examples-2.8.2.jar wordcount input output</span><br></pre></td></tr></table></figure></p>
+<p>output 是输出文件夹，不要提前自行该创建该文件夹。该文件夹中包含了输出结果和成功信息，如下所示：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">$ ls output</span><br><span class="line">part-r-00000  _SUCCESS</span><br><span class="line">akis@ubuntu:~$ cat output/part-r-00000 </span><br><span class="line">bye    3</span><br><span class="line">hello    3</span><br><span class="line">java    2</span><br><span class="line">python    1</span><br><span class="line">world    1</span><br></pre></td></tr></table></figure></p>
+<h3 id="2-2-伪分布式模式-Pseudo-Distributed-Operation"><a href="#2-2-伪分布式模式-Pseudo-Distributed-Operation" class="headerlink" title="2.2 伪分布式模式 - Pseudo-Distributed Operation"></a>2.2 伪分布式模式 - Pseudo-Distributed Operation</h3><p>伪分布式模式用到了 hadoop 的 hdfs，输入输出文件由 hdfs 管理，相比单机模式更接近生产环境。伪分布式模式可以看做只有一个节点的集群，配置过程需要修改 <code>etc/hadoop</code> 中的一些文件。</p>
+<p>在 <code>hadoop-evn.sh</code> 中配置 JAVA_HOME:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"># The java implementation to use.</span><br><span class="line">export JAVA_HOME=/opt/jdk8  # 此处需要使用绝对路径</span><br></pre></td></tr></table></figure></p>
+<p>修改 <code>core-site.xml</code>，此处配置的是 HDFS 的地址及端口号：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">&lt;configuration&gt;</span><br><span class="line">    &lt;property&gt;</span><br><span class="line">        &lt;name&gt;fs.defaultFS&lt;/name&gt;</span><br><span class="line">        &lt;value&gt;hdfs://localhost:9000&lt;/value&gt;</span><br><span class="line">    &lt;/property&gt;</span><br><span class="line">&lt;/configuration&gt;</span><br></pre></td></tr></table></figure></p>
+<p>修改 <code>hdfs-site.xml</code>，此处配置备份数量，默认是 3，修改为 1<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">&lt;configuration&gt;</span><br><span class="line">    &lt;property&gt;</span><br><span class="line">        &lt;name&gt;dfs.replication&lt;/name&gt;</span><br><span class="line">        &lt;value&gt;1&lt;/value&gt;</span><br><span class="line">    &lt;/property&gt;</span><br><span class="line">&lt;/configuration&gt;</span><br></pre></td></tr></table></figure></p>
+<p>此时已经可以运行 Hadoop 了.<br>首先初始化系统，然后启动 NameNode 和 DataNode:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ hdfs namenode -format</span><br><span class="line">$ start-dfs.sh</span><br></pre></td></tr></table></figure></p>
+<p>然后可以运行 <code>jps</code> 查看运行的进程，有如下 <code>NameNode</code>, <code>DataNode</code>, <code>SecondaryNameNode</code> 则运行成功。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">akis@ubuntu:~$ jps</span><br><span class="line">12241 NameNode</span><br><span class="line">14070 Jps</span><br><span class="line">12589 SecondaryNameNode</span><br><span class="line">12366 DataNode</span><br></pre></td></tr></table></figure></p>
+<p>此时输入输出的文件都由 hdfs 来管理，使用 <code>FileSystem Shell</code> 中的 <code>put</code> 可以将本地文件上传到 hdfs 中，然后可运行示例程序。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">$ hadoop fs -mkidr -p /wordcount/input    # 在 hdfs 中创建文件夹</span><br><span class="line">$ hadoop fs -put input/* /wordcount/input   # 将本地的 input 文件夹内容拷贝至 hdfs 中</span><br><span class="line">$ hadoop jar  program/hadoop2/share/hadoop/mapreduce/hadoop-mapreduce-examples-2.8.2.jar wordcount /wordcount/input /wordcount/output</span><br><span class="line">$ hadoop fs -cat /wordcount/output/part-r-00000 # 运行成功后 output 文件夹中文件同上文的单机模式时一致，使用 cat 查看如下</span><br><span class="line">bye    3</span><br><span class="line">hello    3</span><br><span class="line">java    2</span><br><span class="line">python    1</span><br><span class="line">world    1</span><br></pre></td></tr></table></figure></p>
+<p>如果要使程序运行在 yarn 上，需要再配置。<br>修改 <code>mapred-site.xml</code>:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">&lt;configuration&gt;</span><br><span class="line">    &lt;property&gt;</span><br><span class="line">        &lt;name&gt;mapreduce.framework.name&lt;/name&gt;</span><br><span class="line">        &lt;value&gt;yarn&lt;/value&gt;</span><br><span class="line">    &lt;/property&gt;</span><br><span class="line">&lt;/configuration&gt;</span><br></pre></td></tr></table></figure></p>
+<p>同时修改 <code>yarn-site.xml</code>:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">&lt;configuration&gt;</span><br><span class="line">    &lt;property&gt;</span><br><span class="line">        &lt;name&gt;yarn.nodemanager.aux-services&lt;/name&gt;</span><br><span class="line">        &lt;value&gt;mapreduce_shuffle&lt;/value&gt;</span><br><span class="line">    &lt;/property&gt;</span><br><span class="line">&lt;/configuration&gt;</span><br></pre></td></tr></table></figure></p>
+<p>启动 yarn：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ start-yarn.sh</span><br></pre></td></tr></table></figure></p>
+<p>如果要停止服务：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$stop-yarn.sh</span><br><span class="line">$stop-dfs.sh</span><br></pre></td></tr></table></figure></p>
+<p>在单机模式、伪分布模式和基于 yarn 的伪分布模式三种模式中，用小数据量测试时运行速度依次变慢，三种模式耗费的硬件资源依次增多。在笔者的测试中，在虚拟机中配置好后，yarn 模式运行很慢。<strong>如果出现了再 yarn 模式下运行出错的情况，可以尝试增大虚拟机内存，笔者虚拟机内存在 2G 时，运行自带的 wordcount 示例也会出现 connection refused 和 namenode 断掉的情况，将内存增加至 4G 后问题解决了!</strong></p>
+<h2 id="3-可能出现的问题"><a href="#3-可能出现的问题" class="headerlink" title="3 可能出现的问题"></a>3 可能出现的问题</h2><p>如果遇到 namenode 无法启动的情况，可能是默认的缓存文件夹的问题，则此时在 <code>core-site.xml</code> 更改缓存的位置后重新格式化即可<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">&lt;property&gt;</span><br><span class="line">    &lt;name&gt;hadoop.tmp.dir&lt;/name&gt;</span><br><span class="line">    &lt;value&gt;/home/akis/hadoop_tmp&lt;/value&gt;  &lt;!-- 指定本机上的一个目录, 默认目录在本机的 /tmp 下--&gt;</span><br><span class="line">    &lt;description&gt;A base for other temporary directories.&lt;/description&gt;</span><br><span class="line">&lt;/property&gt;</span><br></pre></td></tr></table></figure></p>
+<p>如果遇到端口占用无法启动则杀掉该端口或者换端口即可。如果控制台没有输出错误信息，可以查看 hadoop 安装路径下的 log 文件夹中查看对应的 log 信息。</p>
+<h2 id="4-Reference"><a href="#4-Reference" class="headerlink" title="4 Reference"></a>4 Reference</h2><ul>
+<li><a href="http://hadoop.apache.org/docs/current/hadoop-project-dist/hadoop-common/SingleCluster.html" target="_blank" rel="noopener">Setting up a Single Node Cluster</a></li>
+<li><a href="http://blog.csdn.net/scgaliguodong123_/article/details/44498173" target="_blank" rel="noopener">解决Hadoop namenode无法启动以及修改hdfs的存放位置</a></li>
+<li><a href="https://segmentfault.com/a/1190000006838239" target="_blank" rel="noopener">hadoop启动遇到的各种问题</a></li>
+</ul>
+
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+      
+    
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Hadoop/" rel="tag"># Hadoop</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2017/mac-battery/" rel="prev" title="使用脚本查看 macOS 电池信息">
+                使用脚本查看 macOS 电池信息 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+  </div>
+
+
+          </div>
+          
+
+  
+    <div class="comments" id="comments">
+      <div id="disqus_thread">
+        <noscript>Please enable JavaScript to view the comments powered by Disqus.</noscript>
+      </div>
+    </div>
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image"
+                src="/uploads/avatar.jpg"
+                alt="Akisaya"/>
+            
+              <p class="site-author-name" itemprop="name">Akisaya</p>
+              <div class="site-description motion-element" itemprop="description">Take A Leap of Faith</div>
+          </div>
+
+          
+            <nav class="site-state motion-element">
+              
+                <div class="site-state-item site-state-posts">
+                
+                  <a href="/archives/">
+                
+                    <span class="site-state-item-count">12</span>
+                    <span class="site-state-item-name">posts</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-categories">
+                  
+                    
+                      <a href="/categories/">
+                    
+                  
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">5</span>
+                    <span class="site-state-item-name">categories</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-tags">
+                  
+                    
+                      <a href="/tags/">
+                    
+                  
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">19</span>
+                    <span class="site-state-item-name">tags</span>
+                  </a>
+                </div>
+              
+            </nav>
+          
+
+          
+
+          
+
+          
+            <div class="links-of-author motion-element">
+              
+                <span class="links-of-author-item">
+                  
+                  
+                    
+                  
+                  
+                    
+                  
+                  <a href="https://github.com/akisaya" title="GitHub &rarr; https://github.com/akisaya" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+                </span>
+              
+                <span class="links-of-author-item">
+                  
+                  
+                    
+                  
+                  
+                    
+                  
+                  <a href="mailto:akisaya@foxmail.com" title="E-Mail &rarr; mailto:akisaya@foxmail.com" rel="noopener" target="_blank"><i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                </span>
+              
+            </div>
+          
+
+          
+
+          
+          
+
+          
+            
+          
+          
+
+        </div>
+      </div>
+
+      
+      <!--noindex-->
+        <div class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+            
+            
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-前置安装程序"><span class="nav-number">1.</span> <span class="nav-text">1 前置安装程序</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-1-安装-JDK"><span class="nav-number">1.1.</span> <span class="nav-text">1.1 安装 JDK</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-2-安装-SSH"><span class="nav-number">1.2.</span> <span class="nav-text">1.2 安装 SSH</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-安装配置-Hadoop"><span class="nav-number">2.</span> <span class="nav-text">2 安装配置 Hadoop</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#2-1-单机模式-Standalone-Operation"><span class="nav-number">2.1.</span> <span class="nav-text">2.1 单机模式 - Standalone Operation</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-2-伪分布式模式-Pseudo-Distributed-Operation"><span class="nav-number">2.2.</span> <span class="nav-text">2.2 伪分布式模式 - Pseudo-Distributed Operation</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-可能出现的问题"><span class="nav-number">3.</span> <span class="nav-text">3 可能出现的问题</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-Reference"><span class="nav-number">4.</span> <span class="nav-text">4 Reference</span></a></li></ol></div>
+            
+
+          </div>
+        </div>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+  
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2020</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Akisaya</span>
+
+  
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> v3.7.1</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme – <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> v7.1.1</div>
+
+
+
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  
+    <span class="post-meta-item-icon">
+      <i class="fa fa-user"></i>
+    </span>
+    <span class="site-uv" title="Total Visitors">
+      <span class="busuanzi-value" id="busuanzi_value_site_uv"></span>
+    </span>
+  
+
+  
+    <span class="post-meta-divider">|</span>
+  
+
+  
+    <span class="post-meta-item-icon">
+      <i class="fa fa-eye"></i>
+    </span>
+    <span class="site-pv" title="Total Views">
+      <span class="busuanzi-value" id="busuanzi_value_site_pv"></span>
+    </span>
+  
+</div>
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+    
+
+    
+  </div>
+
+  
+
+<script>
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+
+  
+
+
+  <script src="/js/utils.js?v=7.1.1"></script>
+
+  <script src="/js/motion.js?v=7.1.1"></script>
+
+
+
+  
+  
+
+
+  <script src="/js/affix.js?v=7.1.1"></script>
+
+  <script src="/js/schemes/pisces.js?v=7.1.1"></script>
+
+
+
+  
+  <script src="/js/scrollspy.js?v=7.1.1"></script>
+<script src="/js/post-details.js?v=7.1.1"></script>
+
+
+
+  
+
+
+  <script src="/js/next-boot.js?v=7.1.1"></script>
+
+
+  
+
+  
+
+  
+
+  
+  
+  <script id="dsq-count-scr" src="https://akisaya.disqus.com/count.js" async></script>
+
+
+<script>
+  var disqus_config = function() {
+    this.page.url = "https://akisaya.github.io/2017/Hadoop-单机配置/";
+    this.page.identifier = "2017/Hadoop-单机配置/";
+    this.page.title = 'Hadoop 单机配置';
+    };
+  function loadComments() {
+    var d = document, s = d.createElement('script');
+    s.src = 'https://akisaya.disqus.com/embed.js';
+    s.setAttribute('data-timestamp', '' + +new Date());
+    (d.head || d.body).appendChild(s);
+  }
+  
+    loadComments();
+  
+</script>
+
+
+
+
+
+  
+
+
+  
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+  <script>
+    (function(){
+      var bp = document.createElement('script');
+      var curProtocol = window.location.protocol.split(':')[0];
+      bp.src = (curProtocol === 'https') ? 'https://zz.bdstatic.com/linksubmit/push.js' : 'http://push.zhanzhang.baidu.com/push.js';
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(bp, s);
+    })();
+  </script>
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+<script>
+  $('.highlight').not('.gist .highlight').each(function(i, e) {
+    var $wrap = $('<div>').addClass('highlight-wrap');
+    $(e).after($wrap);
+    $wrap.append($('<button>').addClass('copy-btn').append('Copy').on('click', function(e) {
+      var code = $(this).parent().find('.code').find('.line').map(function(i, e) {
+        return $(e).text();
+      }).toArray().join('\n');
+      var ta = document.createElement('textarea');
+      var yPosition = window.pageYOffset || document.documentElement.scrollTop;
+      ta.style.top = yPosition + 'px'; // Prevent page scroll
+      ta.style.position = 'absolute';
+      ta.style.opacity = '0';
+      ta.readOnly = true;
+      ta.value = code;
+      document.body.appendChild(ta);
+      ta.select();
+      ta.setSelectionRange(0, code.length);
+      ta.readOnly = false;
+      var result = document.execCommand('copy');
+      
+        if (result) $(this).text('Copied');
+        else $(this).text('Copy failed');
+      
+      ta.blur(); // For iOS
+      $(this).blur();
+    })).on('mouseleave', function(e) {
+      var $b = $(this).find('.copy-btn');
+      setTimeout(function() {
+        $b.text('Copy');
+      }, 300);
+    }).append(e);
+  })
+</script>
+
+
+  
+
+  
+
+</body>
+</html>

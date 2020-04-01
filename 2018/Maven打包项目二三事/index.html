@@ -1,0 +1,1056 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<html class="theme-next pisces" lang="zh_CN">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2"/>
+<meta name="theme-color" content="#222"/>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2"/>
+
+<link rel="stylesheet" href="/css/main.css?v=7.1.1"/>
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=7.1.1">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=7.1.1">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=7.1.1">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=7.1.1" color="#222">
+
+
+
+
+
+
+
+<script id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '7.1.1',
+    sidebar: {"position":"left","display":"post","b2t":true},
+    back2top: true,
+    back2top_sidebar: false,
+    fancybox: false,
+    fastclick: false,
+    lazyload: false,
+    tabs: true,
+    motion: {"enable":false},
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+  
+
+
+
+
+  <meta name="description" content="使用 Maven 打包项目我们在 Idea 构建 Maven 工程时，在 Idea 的侧边栏可以调出 Maven 相关的操作选项，可以很容易的来执行生命周期，clean 可以清理编译出来的文件，compile 对文件进行编译，package 将项目进行打包，install 将打包完成的包发布到本地的 Maven 仓库。如果我们没有为各个生命周期配置插件，Maven 将使用默认的插件完成这些生命周期">
+<meta name="keywords" content="maven,springboot">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Maven打包项目二三事">
+<meta property="og:url" content="https://akisaya.github.io/2018/Maven打包项目二三事/index.html">
+<meta property="og:site_name" content="Inspiration">
+<meta property="og:description" content="使用 Maven 打包项目我们在 Idea 构建 Maven 工程时，在 Idea 的侧边栏可以调出 Maven 相关的操作选项，可以很容易的来执行生命周期，clean 可以清理编译出来的文件，compile 对文件进行编译，package 将项目进行打包，install 将打包完成的包发布到本地的 Maven 仓库。如果我们没有为各个生命周期配置插件，Maven 将使用默认的插件完成这些生命周期">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:updated_time" content="2020-04-01T17:40:11.491Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Maven打包项目二三事">
+<meta name="twitter:description" content="使用 Maven 打包项目我们在 Idea 构建 Maven 工程时，在 Idea 的侧边栏可以调出 Maven 相关的操作选项，可以很容易的来执行生命周期，clean 可以清理编译出来的文件，compile 对文件进行编译，package 将项目进行打包，install 将打包完成的包发布到本地的 Maven 仓库。如果我们没有为各个生命周期配置插件，Maven 将使用默认的插件完成这些生命周期">
+
+
+
+
+
+  
+  
+  <link rel="canonical" href="https://akisaya.github.io/2018/Maven打包项目二三事/"/>
+
+
+
+<script id="page.configurations">
+  CONFIG.page = {
+    sidebar: "",
+  };
+</script>
+
+  <title>Maven打包项目二三事 | Inspiration</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .motion-element,
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-title { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh_CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Inspiration</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+    
+    
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="Toggle navigation bar">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  
+    <ul id="menu" class="menu">
+      
+        
+        
+        
+          
+          <li class="menu-item menu-item-home">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br/>Home</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-about">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/about/" rel="section"><i class="menu-item-icon fa fa-fw fa-user"></i> <br/>About</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-tags">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/tags/" rel="section"><i class="menu-item-icon fa fa-fw fa-tags"></i> <br/>Tags</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-categories">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br/>Categories</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-archives">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br/>Archives</a>
+
+  </li>
+
+      
+      
+    </ul>
+  
+
+  
+
+  
+</nav>
+
+
+
+  
+
+
+
+</div>
+    </header>
+
+    
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+            
+
+          
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://akisaya.github.io/2018/Maven打包项目二三事/"/>
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Akisaya"/>
+      <meta itemprop="description" content="Take A Leap of Faith"/>
+      <meta itemprop="image" content="/uploads/avatar.jpg"/>
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Inspiration"/>
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h2 class="post-title" itemprop="name headline">Maven打包项目二三事
+
+              
+            
+          </h2>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+
+              
+                
+              
+
+              <time title="Created: 2018-09-14 16:06:00" itemprop="dateCreated datePublished" datetime="2018-09-14T16:06:00+08:00">2018-09-14</time>
+            
+
+            
+              
+
+              
+                
+                <span class="post-meta-divider">|</span>
+                
+
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">Edited on</span>
+                
+                <time title="Modified: 2020-04-02 01:40:11" itemprop="dateModified" datetime="2020-04-02T01:40:11+08:00">2020-04-02</time>
+              
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/web/" itemprop="url" rel="index"><span itemprop="name">web</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+            
+              
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+            
+                <span class="post-meta-item-text">Comments: </span>
+                <a href="/2018/Maven打包项目二三事/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2018/Maven打包项目二三事/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+            <span class="post-meta-divider">|</span>
+            <span class="post-meta-item-icon"
+            >
+            <i class="fa fa-eye"></i>
+             Views:  
+            <span class="busuanzi-value" id="busuanzi_value_page_pv"></span>
+            </span>
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h2 id="使用-Maven-打包项目"><a href="#使用-Maven-打包项目" class="headerlink" title="使用 Maven 打包项目"></a>使用 Maven 打包项目</h2><p>我们在 Idea 构建 Maven 工程时，在 Idea 的侧边栏可以调出 Maven 相关的操作选项，可以很容易的来执行生命周期，clean 可以清理编译出来的文件，compile 对文件进行编译，package 将项目进行打包，install 将打包完成的包发布到本地的 Maven 仓库。如果我们没有为各个生命周期配置插件，Maven 将使用默认的插件完成这些生命周期。例如，Maven 默认使用 maven-jar-plugin 对项目进行打包，打包生成的包只能作为一个依赖包使用，不能作为一个可执行包，要作为一个可执行包，需要配置 <code>Main-Class</code><br><a id="more"></a></p>
+<h2 id="Maven-项目读取本地-Jar-包"><a href="#Maven-项目读取本地-Jar-包" class="headerlink" title="Maven 项目读取本地 Jar 包"></a>Maven 项目读取本地 Jar 包</h2><p>要在本地项目中引入本地的 Jar 包，网上很多，这里就说说通过 Scope 引入本地包的方法。<br>在 pom.xml 中添加下面的 dependency<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">&lt;dependency&gt;</span><br><span class="line">    &lt;groupId&gt;org.apache.commons&lt;/groupId&gt;</span><br><span class="line">    &lt;artifactId&gt;commons-lang3&lt;/artifactId&gt;</span><br><span class="line">    &lt;version&gt;3.8&lt;/version&gt;</span><br><span class="line">    &lt;scope&gt;system&lt;/scope&gt;</span><br><span class="line">    &lt;systemPath&gt;$&#123;basedir&#125;/lib/commons-lang3-3.8.jar&lt;/systemPath&gt;</span><br><span class="line">&lt;/dependency&gt;</span><br></pre></td></tr></table></figure></p>
+<p>在项目中则需要在根目录下新建 lib 文件夹，然后将 jar 包置入</p>
+<p>其实如果不想后续打包可能造成的麻烦，最好是 install 到本地仓库然后引入，只不过最近在客户现场做项目的时候，电脑都装不了 maven，我还是用 idea 自带的 maven 的</p>
+<h2 id="使用-maven-jar-plugin-打包可执行文件"><a href="#使用-maven-jar-plugin-打包可执行文件" class="headerlink" title="使用 maven-jar-plugin 打包可执行文件"></a>使用 maven-jar-plugin 打包可执行文件</h2><p>使用 maven-jar-plugin 打包出来的可执行 jar 是不包含依赖的，所以我们需要将依赖也打包出来，需要使用 dependency-plguin 的配置<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line">&lt;plugin&gt;</span><br><span class="line">    &lt;groupId&gt;org.apache.maven.plugins&lt;/groupId&gt;</span><br><span class="line">    &lt;artifactId&gt;maven-jar-plugin&lt;/artifactId&gt;</span><br><span class="line">    &lt;version&gt;3.0.2&lt;/version&gt;</span><br><span class="line">    &lt;configuration&gt;</span><br><span class="line">        &lt;archive&gt;</span><br><span class="line">            &lt;manifest&gt;</span><br><span class="line">                &lt;addClasspath&gt;true&lt;/addClasspath&gt;</span><br><span class="line">                &lt;classpathPrefix&gt;lib/&lt;/classpathPrefix&gt;</span><br><span class="line">                &lt;mainClass&gt;Test&lt;/mainClass&gt;</span><br><span class="line">            &lt;/manifest&gt;</span><br><span class="line">            &lt;!--可以把依赖本地系统的Jar包加入Manifest文件中--&gt;</span><br><span class="line">            &lt;manifestEntries&gt;</span><br><span class="line">                &lt;Class-Path&gt;lib/commons-lang3-3.8.jar&lt;/Class-Path&gt;</span><br><span class="line">            &lt;/manifestEntries&gt;</span><br><span class="line">        &lt;/archive&gt;</span><br><span class="line">    &lt;/configuration&gt;</span><br><span class="line">&lt;/plugin&gt;</span><br><span class="line"></span><br><span class="line">&lt;plugin&gt;</span><br><span class="line">    &lt;groupId&gt;org.apache.maven.plugins&lt;/groupId&gt;</span><br><span class="line">    &lt;artifactId&gt;maven-dependency-plugin&lt;/artifactId&gt;</span><br><span class="line">    &lt;version&gt;3.1.1&lt;/version&gt;</span><br><span class="line">    &lt;executions&gt;</span><br><span class="line">        &lt;execution&gt;</span><br><span class="line">            &lt;id&gt;copy-dependencies&lt;/id&gt;</span><br><span class="line">            &lt;phase&gt;package&lt;/phase&gt;</span><br><span class="line">            &lt;goals&gt;</span><br><span class="line">                &lt;goal&gt;copy-dependencies&lt;/goal&gt;</span><br><span class="line">            &lt;/goals&gt;</span><br><span class="line">            &lt;configuration&gt;</span><br><span class="line">                &lt;outputDirectory&gt;$&#123;project.build.directory&#125;/lib&lt;/outputDirectory&gt;</span><br><span class="line">                &lt;overWriteReleases&gt;false&lt;/overWriteReleases&gt;</span><br><span class="line">                &lt;overWriteSnapshots&gt;false&lt;/overWriteSnapshots&gt;</span><br><span class="line">                &lt;overWriteIfNewer&gt;true&lt;/overWriteIfNewer&gt;</span><br><span class="line">            &lt;/configuration&gt;</span><br><span class="line">        &lt;/execution&gt;</span><br><span class="line">    &lt;/executions&gt;</span><br><span class="line">&lt;/plugin&gt;</span><br></pre></td></tr></table></figure></p>
+<p>jar-plugin 的 <classpathprefix> 指定了 classpath 的位置，本案例中即读取可执行包同级目录下的 lib 目录，可执行 jar 的 Manifest 文件如下。dependency-plugin 则将 maven 中的依赖包打包到 <outputdirectory> 指定目录下。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">Manifest-Version: 1.0</span><br><span class="line">Built-By: akis</span><br><span class="line">Class-Path: lib/guava-26.0-jre.jar lib/jsr305-3.0.2.jar lib/checker-qu</span><br><span class="line"> al-2.5.2.jar lib/error_prone_annotations-2.1.3.jar lib/j2objc-annotat</span><br><span class="line"> ions-1.1.jar lib/animal-sniffer-annotations-1.14.jar lib/commons-lang</span><br><span class="line"> 3-3.8.jar</span><br><span class="line">Created-By: Apache Maven 3.3.9</span><br><span class="line">Build-Jdk: 1.8.0_172</span><br><span class="line">Main-Class: Test</span><br></pre></td></tr></table></figure></outputdirectory></classpathprefix></p>
+<h3 id="将依赖包打包到可执行包中"><a href="#将依赖包打包到可执行包中" class="headerlink" title="将依赖包打包到可执行包中"></a>将依赖包打包到可执行包中</h3><p>要将依赖包中打包到可执行包中，有很多插件能做到，这里介绍一下 shade-plugin<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">&lt;plugin&gt;</span><br><span class="line">&lt;groupId&gt;org.apache.maven.plugins&lt;/groupId&gt;</span><br><span class="line">&lt;artifactId&gt;maven-shade-plugin&lt;/artifactId&gt;</span><br><span class="line">&lt;version&gt;3.1.1&lt;/version&gt;</span><br><span class="line">&lt;executions&gt;</span><br><span class="line">  &lt;execution&gt;</span><br><span class="line">    &lt;goals&gt;</span><br><span class="line">      &lt;goal&gt;shade&lt;/goal&gt;</span><br><span class="line">    &lt;/goals&gt;</span><br><span class="line">    &lt;configuration&gt;</span><br><span class="line">      &lt;transformers&gt;</span><br><span class="line">        &lt;transformer implementation=&quot;org.apache.maven.plugins.shade.resource.ManifestResourceTransformer&quot;&gt;</span><br><span class="line">          &lt;manifestEntries&gt;</span><br><span class="line">            &lt;Main-Class&gt;$&#123;app.main.class&#125;&lt;/Main-Class&gt;</span><br><span class="line">            &lt;X-Compile-Source-JDK&gt;$&#123;maven.compiler.source&#125;&lt;/X-Compile-Source-JDK&gt;</span><br><span class="line">            &lt;X-Compile-Target-JDK&gt;$&#123;maven.compiler.target&#125;&lt;/X-Compile-Target-JDK&gt;</span><br><span class="line">          &lt;/manifestEntries&gt;</span><br><span class="line">        &lt;/transformer&gt;</span><br><span class="line">      &lt;/transformers&gt;</span><br><span class="line">    &lt;/configuration&gt;</span><br><span class="line">  &lt;/execution&gt;</span><br><span class="line">&lt;/executions&gt;</span><br><span class="line">&lt;/plugin&gt;</span><br></pre></td></tr></table></figure></p>
+<p>该插件能将依赖包导入可行性 jar 包，但是不会引入上文提到的本地引入的依赖包，如果想导入本地依赖的包到可执行 jar，可以使用 <a href="https://blog.csdn.net/gaopu12345/article/details/78596830" target="_blank" rel="noopener">addjars-maven-plugin</a>，有兴趣的读者可以试试</p>
+<p>当然使用 java -cp 命令而不是 java -jar 命令来执行主类的话，可以暂时解决外置依赖没打包进依赖包的问题<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">// java -cp xx.jar:lib/xx.jar packageName.MainClassName</span><br><span class="line">java -cp testpackage-1.0-SNAPSHOT.jar:lib/commons-lang3-3.8.jar Test</span><br></pre></td></tr></table></figure></p>
+<p>最近发现<code>ManifestResourceTransformer</code> 除了可以指定 <code>MainClass</code>, 其实还可以指定 Manifest 文件里任意的属性，类的名字也隐含了这一点，所以如果利用 <code>shade-plugin</code> 的话，可以指定读取外置的依赖，只需要在 <code>manifestEntries</code> 中增加 <code>Class-Path</code> 属性，如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">&lt;manifestEntries&gt;</span><br><span class="line">&lt;Main-Class&gt;$&#123;app.main.class&#125;&lt;/Main-Class&gt;</span><br><span class="line">&lt;X-Compile-Source-JDK&gt;$&#123;maven.compiler.source&#125;&lt;/X-Compile-Source-JDK&gt;</span><br><span class="line">&lt;X-Compile-Target-JDK&gt;$&#123;maven.compiler.target&#125;&lt;/X-Compile-Target-JDK&gt;</span><br><span class="line">&lt;Class-Path&gt;lib/$&#123;planet-graph-lib&#125;&lt;/Class-Path&gt;</span><br><span class="line">&lt;/manifestEntries&gt;</span><br></pre></td></tr></table></figure></p>
+<p>打包后，就可以用 java -jar 来运行了</p>
+<h2 id="springboot-项目打包"><a href="#springboot-项目打包" class="headerlink" title="springboot 项目打包"></a>springboot 项目打包</h2><p>springboot 项目默认使用了 spring-boot-maven-plugin，默认会打包一个嵌入了 tomcat 的可执行 jar 包，最近做的一个项目里就需要引入外置的 jar 包，并且不将其打包到 springboot 的可执行 jar 里，所以可以用上文提到的引入方法。这样如果我们的外置 jar 更新了，只需要替换掉外置的这个 jar，已经打包的应用则不需要更改。<br>那么需要解决的问题是在运行 springboot 打包出来的可执行 jar 的时候能够读到外置的这个 jar 依赖。</p>
+<p>首先给出解决方案，配置 spring-boot-maven-plugin，将其 layout 改为 ZIP<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">&lt;plugins&gt;</span><br><span class="line">    &lt;plugin&gt;</span><br><span class="line">        &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;</span><br><span class="line">        &lt;artifactId&gt;spring-boot-maven-plugin&lt;/artifactId&gt;</span><br><span class="line">        &lt;configuration&gt;</span><br><span class="line">            &lt;layout&gt;ZIP&lt;/layout&gt;</span><br><span class="line">            &lt;executable&gt;true&lt;/executable&gt;</span><br><span class="line">        &lt;/configuration&gt;</span><br><span class="line">    &lt;/plugin&gt;</span><br></pre></td></tr></table></figure></p>
+<p>然后在运行的时候加上 -Dloader.path 这个参数，lib 是 springboot 应用同级目录下的外置依赖目录，我们的外置依赖就放在这个 lib 中<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">java -Dloader.path=lib ph_pg-0.0.1-SNAPSHOT.jar --spring.profiles.active=prod</span><br></pre></td></tr></table></figure></p>
+<p>原因是 springboot 应用启动时时从 org.springframework.boot.loader.JarLauncher 开始启动的，该启动器会忽略外置的 classpath 下的包，因此需要替换成 PropertiesLauncher，配置 layout 为 ZIP 后，springboot 就从 PropertiesLauncher 开始启动，并且使用 loader.path 配置外置的 classpath</p>
+<h3 id="参考："><a href="#参考：" class="headerlink" title="参考："></a>参考：</h3><p><a href="https://stackoverflow.com/questions/40994851/spring-boot-executable-jar-layout-changes-break-classpath" target="_blank" rel="noopener">StackOverflow</a><br><a href="https://docs.spring.io/spring-boot/docs/current/reference/htmlsingle/#executable-jar-launching" target="_blank" rel="noopener">Springboot Reference</a><br><a href="https://www.jianshu.com/p/a2cf2336a48c" target="_blank" rel="noopener">SpringBoot加载外部依赖</a><br><a href="https://blog.csdn.net/timedifier2/article/details/53925825" target="_blank" rel="noopener">Springboot的“fat jar” 变成 “thin jar”</a>, 这篇很值得看下</p>
+<h2 id="Maven-打包时排除掉某个文件"><a href="#Maven-打包时排除掉某个文件" class="headerlink" title="Maven 打包时排除掉某个文件"></a>Maven 打包时排除掉某个文件</h2><p>项目里 License 模块，LicenseGenerator 也在模块里，但是打包的时候我们就不能把这个文件打包到依赖包里了，解决方法是，打包时，让这个文件不参与编译就行了，如下，需要注意的是其他的 java 类里也不要 import 这个 LicenseGenerator，不然还是会被编译。我们及时清除不需要的 import 是个好习惯<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">&lt;plugin&gt;</span><br><span class="line">    &lt;groupId&gt;org.apache.maven.plugins&lt;/groupId&gt;</span><br><span class="line">    &lt;artifactId&gt;maven-compiler-plugin&lt;/artifactId&gt;</span><br><span class="line">    &lt;configuration&gt;</span><br><span class="line">        &lt;source&gt;1.8&lt;/source&gt;</span><br><span class="line">        &lt;target&gt;1.8&lt;/target&gt;</span><br><span class="line">        &lt;excludes&gt;</span><br><span class="line">            &lt;exclude&gt;path/to/license/LicenseGenerator.java&lt;/exclude&gt;</span><br><span class="line">        &lt;/excludes&gt;</span><br><span class="line">    &lt;/configuration&gt;</span><br><span class="line">&lt;/plugin&gt;</span><br></pre></td></tr></table></figure></p>
+<h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h2><p>闲来无事，记录下碰到的 Maven 打包的问题吧</p>
+
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+      
+    
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/maven/" rel="tag"># maven</a>
+          
+            <a href="/tags/springboot/" rel="tag"># springboot</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/使用Travis-CI-自动化部署-hexo-博客/" rel="next" title="使用 Travis CI 自动化部署 hexo 博客的碎碎念">
+                <i class="fa fa-chevron-left"></i> 使用 Travis CI 自动化部署 hexo 博客的碎碎念
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2018/ThreadLocal源码阅读/" rel="prev" title="ThreadLocal 源码阅读(JDK8)">
+                ThreadLocal 源码阅读(JDK8) <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+  </div>
+
+
+          </div>
+          
+
+  
+    <div class="comments" id="comments">
+      <div id="disqus_thread">
+        <noscript>Please enable JavaScript to view the comments powered by Disqus.</noscript>
+      </div>
+    </div>
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image"
+                src="/uploads/avatar.jpg"
+                alt="Akisaya"/>
+            
+              <p class="site-author-name" itemprop="name">Akisaya</p>
+              <div class="site-description motion-element" itemprop="description">Take A Leap of Faith</div>
+          </div>
+
+          
+            <nav class="site-state motion-element">
+              
+                <div class="site-state-item site-state-posts">
+                
+                  <a href="/archives/">
+                
+                    <span class="site-state-item-count">12</span>
+                    <span class="site-state-item-name">posts</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-categories">
+                  
+                    
+                      <a href="/categories/">
+                    
+                  
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">5</span>
+                    <span class="site-state-item-name">categories</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-tags">
+                  
+                    
+                      <a href="/tags/">
+                    
+                  
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">19</span>
+                    <span class="site-state-item-name">tags</span>
+                  </a>
+                </div>
+              
+            </nav>
+          
+
+          
+
+          
+
+          
+            <div class="links-of-author motion-element">
+              
+                <span class="links-of-author-item">
+                  
+                  
+                    
+                  
+                  
+                    
+                  
+                  <a href="https://github.com/akisaya" title="GitHub &rarr; https://github.com/akisaya" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+                </span>
+              
+                <span class="links-of-author-item">
+                  
+                  
+                    
+                  
+                  
+                    
+                  
+                  <a href="mailto:akisaya@foxmail.com" title="E-Mail &rarr; mailto:akisaya@foxmail.com" rel="noopener" target="_blank"><i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                </span>
+              
+            </div>
+          
+
+          
+
+          
+          
+
+          
+            
+          
+          
+
+        </div>
+      </div>
+
+      
+      <!--noindex-->
+        <div class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+            
+            
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#使用-Maven-打包项目"><span class="nav-number">1.</span> <span class="nav-text">使用 Maven 打包项目</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Maven-项目读取本地-Jar-包"><span class="nav-number">2.</span> <span class="nav-text">Maven 项目读取本地 Jar 包</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#使用-maven-jar-plugin-打包可执行文件"><span class="nav-number">3.</span> <span class="nav-text">使用 maven-jar-plugin 打包可执行文件</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#将依赖包打包到可执行包中"><span class="nav-number">3.1.</span> <span class="nav-text">将依赖包打包到可执行包中</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#springboot-项目打包"><span class="nav-number">4.</span> <span class="nav-text">springboot 项目打包</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#参考："><span class="nav-number">4.1.</span> <span class="nav-text">参考：</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Maven-打包时排除掉某个文件"><span class="nav-number">5.</span> <span class="nav-text">Maven 打包时排除掉某个文件</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#小结"><span class="nav-number">6.</span> <span class="nav-text">小结</span></a></li></ol></div>
+            
+
+          </div>
+        </div>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+  
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2020</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Akisaya</span>
+
+  
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> v3.7.1</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme – <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> v7.1.1</div>
+
+
+
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  
+    <span class="post-meta-item-icon">
+      <i class="fa fa-user"></i>
+    </span>
+    <span class="site-uv" title="Total Visitors">
+      <span class="busuanzi-value" id="busuanzi_value_site_uv"></span>
+    </span>
+  
+
+  
+    <span class="post-meta-divider">|</span>
+  
+
+  
+    <span class="post-meta-item-icon">
+      <i class="fa fa-eye"></i>
+    </span>
+    <span class="site-pv" title="Total Views">
+      <span class="busuanzi-value" id="busuanzi_value_site_pv"></span>
+    </span>
+  
+</div>
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+    
+
+    
+  </div>
+
+  
+
+<script>
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+
+  
+
+
+  <script src="/js/utils.js?v=7.1.1"></script>
+
+  <script src="/js/motion.js?v=7.1.1"></script>
+
+
+
+  
+  
+
+
+  <script src="/js/affix.js?v=7.1.1"></script>
+
+  <script src="/js/schemes/pisces.js?v=7.1.1"></script>
+
+
+
+  
+  <script src="/js/scrollspy.js?v=7.1.1"></script>
+<script src="/js/post-details.js?v=7.1.1"></script>
+
+
+
+  
+
+
+  <script src="/js/next-boot.js?v=7.1.1"></script>
+
+
+  
+
+  
+
+  
+
+  
+  
+  <script id="dsq-count-scr" src="https://akisaya.disqus.com/count.js" async></script>
+
+
+<script>
+  var disqus_config = function() {
+    this.page.url = "https://akisaya.github.io/2018/Maven打包项目二三事/";
+    this.page.identifier = "2018/Maven打包项目二三事/";
+    this.page.title = 'Maven打包项目二三事';
+    };
+  function loadComments() {
+    var d = document, s = d.createElement('script');
+    s.src = 'https://akisaya.disqus.com/embed.js';
+    s.setAttribute('data-timestamp', '' + +new Date());
+    (d.head || d.body).appendChild(s);
+  }
+  
+    loadComments();
+  
+</script>
+
+
+
+
+
+  
+
+
+  
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+  <script>
+    (function(){
+      var bp = document.createElement('script');
+      var curProtocol = window.location.protocol.split(':')[0];
+      bp.src = (curProtocol === 'https') ? 'https://zz.bdstatic.com/linksubmit/push.js' : 'http://push.zhanzhang.baidu.com/push.js';
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(bp, s);
+    })();
+  </script>
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+<script>
+  $('.highlight').not('.gist .highlight').each(function(i, e) {
+    var $wrap = $('<div>').addClass('highlight-wrap');
+    $(e).after($wrap);
+    $wrap.append($('<button>').addClass('copy-btn').append('Copy').on('click', function(e) {
+      var code = $(this).parent().find('.code').find('.line').map(function(i, e) {
+        return $(e).text();
+      }).toArray().join('\n');
+      var ta = document.createElement('textarea');
+      var yPosition = window.pageYOffset || document.documentElement.scrollTop;
+      ta.style.top = yPosition + 'px'; // Prevent page scroll
+      ta.style.position = 'absolute';
+      ta.style.opacity = '0';
+      ta.readOnly = true;
+      ta.value = code;
+      document.body.appendChild(ta);
+      ta.select();
+      ta.setSelectionRange(0, code.length);
+      ta.readOnly = false;
+      var result = document.execCommand('copy');
+      
+        if (result) $(this).text('Copied');
+        else $(this).text('Copy failed');
+      
+      ta.blur(); // For iOS
+      $(this).blur();
+    })).on('mouseleave', function(e) {
+      var $b = $(this).find('.copy-btn');
+      setTimeout(function() {
+        $b.text('Copy');
+      }, 300);
+    }).append(e);
+  })
+</script>
+
+
+  
+
+  
+
+</body>
+</html>

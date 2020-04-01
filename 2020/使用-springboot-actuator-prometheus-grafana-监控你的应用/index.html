@@ -1,0 +1,1054 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<html class="theme-next pisces" lang="zh_CN">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2"/>
+<meta name="theme-color" content="#222"/>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2"/>
+
+<link rel="stylesheet" href="/css/main.css?v=7.1.1"/>
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=7.1.1">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=7.1.1">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=7.1.1">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=7.1.1" color="#222">
+
+
+
+
+
+
+
+<script id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '7.1.1',
+    sidebar: {"position":"left","display":"post","b2t":true},
+    back2top: true,
+    back2top_sidebar: false,
+    fancybox: false,
+    fastclick: false,
+    lazyload: false,
+    tabs: true,
+    motion: {"enable":false},
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+  
+
+
+
+
+  <meta name="description" content="线上的项目经常需要对一些指标如请求量，qps，延时等指标做统计方便我们观察系统的运行状态，并帮助我们定位系统可能存在的性能等问题。springboot actuator 为 springboot 应用提供了指标的统计方法，prometheus 是一个监控中心，grafana 则是一个数据展示中心，本文将通过一个小案例介绍综合使用 springboot actuator、prometheus、gra">
+<meta name="keywords" content="springboot,prometheus,grafana,micrometer">
+<meta property="og:type" content="article">
+<meta property="og:title" content="使用 springboot actuator &amp; prometheus &amp; grafana 监控你的应用">
+<meta property="og:url" content="https://akisaya.github.io/2020/使用-springboot-actuator-prometheus-grafana-监控你的应用/index.html">
+<meta property="og:site_name" content="Inspiration">
+<meta property="og:description" content="线上的项目经常需要对一些指标如请求量，qps，延时等指标做统计方便我们观察系统的运行状态，并帮助我们定位系统可能存在的性能等问题。springboot actuator 为 springboot 应用提供了指标的统计方法，prometheus 是一个监控中心，grafana 则是一个数据展示中心，本文将通过一个小案例介绍综合使用 springboot actuator、prometheus、gra">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://akisaya.github.io/2020/使用-springboot-actuator-prometheus-grafana-监控你的应用/prometheus.png">
+<meta property="og:image" content="https://akisaya.github.io/2020/使用-springboot-actuator-prometheus-grafana-监控你的应用/metrics.png">
+<meta property="og:image" content="https://akisaya.github.io/2020/使用-springboot-actuator-prometheus-grafana-监控你的应用/datasource.png">
+<meta property="og:image" content="https://akisaya.github.io/2020/使用-springboot-actuator-prometheus-grafana-监控你的应用/query.png">
+<meta property="og:image" content="https://akisaya.github.io/2020/使用-springboot-actuator-prometheus-grafana-监控你的应用/whole.png">
+<meta property="og:updated_time" content="2020-04-01T17:40:11.491Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="使用 springboot actuator &amp; prometheus &amp; grafana 监控你的应用">
+<meta name="twitter:description" content="线上的项目经常需要对一些指标如请求量，qps，延时等指标做统计方便我们观察系统的运行状态，并帮助我们定位系统可能存在的性能等问题。springboot actuator 为 springboot 应用提供了指标的统计方法，prometheus 是一个监控中心，grafana 则是一个数据展示中心，本文将通过一个小案例介绍综合使用 springboot actuator、prometheus、gra">
+<meta name="twitter:image" content="https://akisaya.github.io/2020/使用-springboot-actuator-prometheus-grafana-监控你的应用/prometheus.png">
+
+
+
+
+
+  
+  
+  <link rel="canonical" href="https://akisaya.github.io/2020/使用-springboot-actuator-prometheus-grafana-监控你的应用/"/>
+
+
+
+<script id="page.configurations">
+  CONFIG.page = {
+    sidebar: "",
+  };
+</script>
+
+  <title>使用 springboot actuator & prometheus & grafana 监控你的应用 | Inspiration</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .motion-element,
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-title { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh_CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Inspiration</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+    
+    
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="Toggle navigation bar">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  
+    <ul id="menu" class="menu">
+      
+        
+        
+        
+          
+          <li class="menu-item menu-item-home">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br/>Home</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-about">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/about/" rel="section"><i class="menu-item-icon fa fa-fw fa-user"></i> <br/>About</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-tags">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/tags/" rel="section"><i class="menu-item-icon fa fa-fw fa-tags"></i> <br/>Tags</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-categories">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br/>Categories</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-archives">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br/>Archives</a>
+
+  </li>
+
+      
+      
+    </ul>
+  
+
+  
+
+  
+</nav>
+
+
+
+  
+
+
+
+</div>
+    </header>
+
+    
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+            
+
+          
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://akisaya.github.io/2020/使用-springboot-actuator-prometheus-grafana-监控你的应用/"/>
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Akisaya"/>
+      <meta itemprop="description" content="Take A Leap of Faith"/>
+      <meta itemprop="image" content="/uploads/avatar.jpg"/>
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Inspiration"/>
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h2 class="post-title" itemprop="name headline">使用 springboot actuator & prometheus & grafana 监控你的应用
+
+              
+            
+          </h2>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+
+              
+                
+              
+
+              <time title="Created: 2020-02-17 17:00:28" itemprop="dateCreated datePublished" datetime="2020-02-17T17:00:28+08:00">2020-02-17</time>
+            
+
+            
+              
+
+              
+                
+                <span class="post-meta-divider">|</span>
+                
+
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">Edited on</span>
+                
+                <time title="Modified: 2020-04-02 01:40:11" itemprop="dateModified" datetime="2020-04-02T01:40:11+08:00">2020-04-02</time>
+              
+            
+          </span>
+
+          
+
+          
+            
+            
+              
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+            
+                <span class="post-meta-item-text">Comments: </span>
+                <a href="/2020/使用-springboot-actuator-prometheus-grafana-监控你的应用/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2020/使用-springboot-actuator-prometheus-grafana-监控你的应用/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+            <span class="post-meta-divider">|</span>
+            <span class="post-meta-item-icon"
+            >
+            <i class="fa fa-eye"></i>
+             Views:  
+            <span class="busuanzi-value" id="busuanzi_value_page_pv"></span>
+            </span>
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>线上的项目经常需要对一些指标如请求量，qps，延时等指标做统计方便我们观察系统的运行状态，并帮助我们定位系统可能存在的性能等问题。springboot actuator 为 springboot 应用提供了指标的统计方法，prometheus 是一个监控中心，grafana 则是一个数据展示中心，本文将通过一个小案例介绍综合使用 springboot actuator、prometheus、grafana 监控我们的应用。<br><a id="more"></a></p>
+<h2 id="springboot-actuator"><a href="#springboot-actuator" class="headerlink" title="springboot actuator"></a>springboot actuator</h2><h3 id="引入-springboot-actuator"><a href="#引入-springboot-actuator" class="headerlink" title="引入 springboot actuator"></a>引入 springboot actuator</h3><p>引入 actuator 依赖即可开始使用 springboot actuator 为我们提供的各种监控指标<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">&lt;dependencies&gt;</span><br><span class="line">    &lt;dependency&gt;</span><br><span class="line">        &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;</span><br><span class="line">        &lt;artifactId&gt;spring-boot-starter-actuator&lt;/artifactId&gt;</span><br><span class="line">    &lt;/dependency&gt;</span><br><span class="line">&lt;/dependencies&gt;</span><br></pre></td></tr></table></figure></p>
+<p>默认情况下 actuator 提供了很多的监控端点（EndPoint），路径均为 <code>/actuatro/&lt;endpoint_name&gt;</code>，比如应用健康信息 health, 访问 <code>/actuator/health</code>，可得到如下返回<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">  &quot;status&quot;: &quot;UP&quot;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>为了提供能被 prometheus 解析收集的监控信息，我们需要启用 prometheus 端点并添加 prometheus 依赖<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"># application.properties</span><br><span class="line">management.endpoints.web.exposure.include=info,health,prometheus</span><br><span class="line"></span><br><span class="line"># pom.xml</span><br><span class="line">&lt;dependency&gt;</span><br><span class="line">    &lt;groupId&gt;io.micrometer&lt;/groupId&gt;</span><br><span class="line">    &lt;artifactId&gt;micrometer-registry-prometheus&lt;/artifactId&gt;</span><br><span class="line">&lt;/dependency&gt;</span><br></pre></td></tr></table></figure></p>
+<p>访问 <code>/actuator/prometheus</code> 得到<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"># HELP process_start_time_seconds Start time of the process since unix epoch.</span><br><span class="line"># TYPE process_start_time_seconds gauge</span><br><span class="line">process_start_time_seconds 1.581927873353E9</span><br><span class="line"># HELP jvm_threads_states_threads The current number of threads having NEW state</span><br><span class="line"># TYPE jvm_threads_states_threads gauge</span><br><span class="line">jvm_threads_states_threads&#123;state=&quot;runnable&quot;,&#125; 9.0</span><br><span class="line">jvm_threads_states_threads&#123;state=&quot;blocked&quot;,&#125; 0.0</span><br><span class="line">jvm_threads_states_threads&#123;state=&quot;waiting&quot;,&#125; 13.0</span><br><span class="line">jvm_threads_states_threads&#123;state=&quot;timed-waiting&quot;,&#125; 2.0</span><br><span class="line">jvm_threads_states_threads&#123;state=&quot;new&quot;,&#125; 0.0</span><br><span class="line">jvm_threads_states_threads&#123;state=&quot;terminated&quot;,&#125; 0.0</span><br><span class="line"># HELP process_files_open_files The open file descriptor count</span><br><span class="line"># TYPE process_files_open_files gauge</span><br><span class="line">process_files_open_files 96.0</span><br><span class="line"># HELP system_load_average_1m The sum of the number of runnable entities queued to available processors and the number of runnable entities running on the available processors averaged over a period of time</span><br><span class="line"># TYPE system_load_average_1m gauge</span><br><span class="line">system_load_average_1m 1.30322265625</span><br><span class="line">...</span><br></pre></td></tr></table></figure></p>
+<p>可以看到这些数据是符合 prometheus 定义的数据收集的格式的，默认提供了 jvm, cpu 和 web 等方面的指标<br>我们给 web 应用定义了 <code>/index</code>,<code>/recommend</code> 的接口，访问一下这些接口后再看看 <code>/actuator/prometheus</code>的输出结果，发现多了<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"># HELP http_server_requests_seconds  </span><br><span class="line"># TYPE http_server_requests_seconds summary</span><br><span class="line">http_server_requests_seconds_count&#123;exception=&quot;None&quot;,method=&quot;GET&quot;,outcome=&quot;SUCCESS&quot;,status=&quot;200&quot;,uri=&quot;/index&quot;,&#125; 1.0</span><br><span class="line">http_server_requests_seconds_sum&#123;exception=&quot;None&quot;,method=&quot;GET&quot;,outcome=&quot;SUCCESS&quot;,status=&quot;200&quot;,uri=&quot;/index&quot;,&#125; 0.013830247</span><br><span class="line">http_server_requests_seconds_count&#123;exception=&quot;None&quot;,method=&quot;GET&quot;,outcome=&quot;SUCCESS&quot;,status=&quot;200&quot;,uri=&quot;/actuator/prometheus&quot;,&#125; 3.0</span><br><span class="line">http_server_requests_seconds_sum&#123;exception=&quot;None&quot;,method=&quot;GET&quot;,outcome=&quot;SUCCESS&quot;,status=&quot;200&quot;,uri=&quot;/actuator/prometheus&quot;,&#125; 0.071013869</span><br><span class="line">http_server_requests_seconds_count&#123;exception=&quot;None&quot;,method=&quot;GET&quot;,outcome=&quot;SUCCESS&quot;,status=&quot;200&quot;,uri=&quot;/recommend&quot;,&#125; 1.0</span><br><span class="line">http_server_requests_seconds_sum&#123;exception=&quot;None&quot;,method=&quot;GET&quot;,outcome=&quot;SUCCESS&quot;,status=&quot;200&quot;,uri=&quot;/recommend&quot;,&#125; 0.092041806</span><br><span class="line"># HELP http_server_requests_seconds_max  </span><br><span class="line"># TYPE http_server_requests_seconds_max gauge</span><br><span class="line">http_server_requests_seconds_max&#123;exception=&quot;None&quot;,method=&quot;GET&quot;,outcome=&quot;SUCCESS&quot;,status=&quot;200&quot;,uri=&quot;/index&quot;,&#125; 0.013830247</span><br><span class="line">http_server_requests_seconds_max&#123;exception=&quot;None&quot;,method=&quot;GET&quot;,outcome=&quot;SUCCESS&quot;,status=&quot;200&quot;,uri=&quot;/actuator/prometheus&quot;,&#125; 0.056484717</span><br><span class="line">http_server_requests_seconds_max&#123;exception=&quot;None&quot;,method=&quot;GET&quot;,outcome=&quot;SUCCESS&quot;,status=&quot;200&quot;,uri=&quot;/recommend&quot;,&#125; 0.092041806</span><br></pre></td></tr></table></figure></p>
+<p>可以看到这些是我们访问这些接口的请求数量和请求时间的相关统计，这些指标是 springboot actuator 默认为我们提供的监控指标，但是有时候我们除了想知道一个接口的总耗时外，也想知道一个接口中各个方法的耗时，又该怎么统计呢？这时候可以使用 Micrometer 在我们的应用中开发相应的统计代码</p>
+<h3 id="Micrometer"><a href="#Micrometer" class="headerlink" title="Micrometer"></a>Micrometer</h3><p>Micormeter 为应用的监控提供统一的接口，类似于 slif4，下面以 timer 指标为例<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">@Autowired</span><br><span class="line">private MeterRegistry registry;</span><br><span class="line"></span><br><span class="line">public String recommend() throws InterruptedException &#123;</span><br><span class="line">    Timer.Sample sample;</span><br><span class="line"></span><br><span class="line">    sample = Timer.start(registry);</span><br><span class="line">    recall();</span><br><span class="line">    sample.stop(registry.timer(&quot;recommend.timer.recall&quot;));</span><br><span class="line"></span><br><span class="line">    sample = Timer.start(registry);</span><br><span class="line">    profile();</span><br><span class="line">    sample.stop(registry.timer(&quot;recommend.timer.profile&quot;));</span><br><span class="line"></span><br><span class="line">    sample = Timer.start(registry);</span><br><span class="line">    predict();</span><br><span class="line">    sample.stop(registry.timer(&quot;recommend.timer.predict&quot;));</span><br><span class="line"></span><br><span class="line">    return &quot;OK&quot;;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>我们使用 Timer 统计了各个方法的耗时，并为每个方法的耗时定义了一个诸如 <code>recommend.timer.recall</code> 的名字</p>
+<p>再次访问 <code>/actuator/prometheus</code><br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"># HELP recommend_timer_recall_seconds_max  </span><br><span class="line"># TYPE recommend_timer_recall_seconds_max gauge</span><br><span class="line">recommend_timer_recall_seconds_max 0.0</span><br><span class="line"># HELP recommend_timer_recall_seconds  </span><br><span class="line"># TYPE recommend_timer_recall_seconds summary</span><br><span class="line">recommend_timer_recall_seconds_count 2.0</span><br><span class="line">recommend_timer_recall_seconds_sum 0.05997796</span><br></pre></td></tr></table></figure></p>
+<p>可以看到统计结果中多出了我们对方法耗时的统计指标</p>
+<h3 id="单指标属性"><a href="#单指标属性" class="headerlink" title="单指标属性"></a>单指标属性</h3><p>有时候我们并不满足于知道一个请求的总时间或者一个方法执行的总时间，比如我们想知道这个请求的平均执行时间，TP99的执行时间。这时候我们就可以定义<a href="https://docs.spring.io/spring-boot/docs/current/reference/htmlsingle/#per-meter-properties" target="_blank" rel="noopener">单指标属性</a>，如使用 <code>management.metrics.distribution.percentiles-histogram</code> 可以统计出指标的分为图数据<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"># application.properties</span><br><span class="line"></span><br><span class="line">management.metrics.distribution.percentiles-histogram.http.server.requests=true</span><br><span class="line">management.metrics.distribution.percentiles-histogram.recommend.timer.recall=true</span><br><span class="line">management.metrics.distribution.percentiles-histogram.recommend.timer.profile=true</span><br><span class="line">management.metrics.distribution.percentiles-histogram.recommend.timer.predict=true</span><br></pre></td></tr></table></figure></p>
+<p><code>http.server.requests</code> 是 springboot actuator 自动为我们监控的属性，参考<a href="https://docs.spring.io/spring-boot/docs/current/reference/htmlsingle/#production-ready-metrics-spring-mvc" target="_blank" rel="noopener">Spring MVC Metrics</a>，后面的 <code>recommend.timer.recall</code> 等是我们在程序中定义的指标，再次访问接口后的统计数据<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"># HELP recommend_timer_predict_seconds  </span><br><span class="line"># TYPE recommend_timer_predict_seconds histogram</span><br><span class="line">recommend_timer_predict_seconds_bucket&#123;le=&quot;0.001&quot;,&#125; 0.0</span><br><span class="line">recommend_timer_predict_seconds_bucket&#123;le=&quot;0.001048576&quot;,&#125; 0.0</span><br><span class="line">recommend_timer_predict_seconds_bucket&#123;le=&quot;0.001398101&quot;,&#125; 0.0</span><br><span class="line">recommend_timer_predict_seconds_bucket&#123;le=&quot;0.001747626&quot;,&#125; 0.0</span><br><span class="line">recommend_timer_predict_seconds_bucket&#123;le=&quot;0.002097151&quot;,&#125; 0.0</span><br><span class="line">recommend_timer_predict_seconds_bucket&#123;le=&quot;0.002446676&quot;,&#125; 0.0</span><br><span class="line">recommend_timer_predict_seconds_bucket&#123;le=&quot;0.002796201&quot;,&#125; 0.0</span><br><span class="line">recommend_timer_predict_seconds_bucket&#123;le=&quot;0.003145726&quot;,&#125; 0.0</span><br><span class="line">recommend_timer_predict_seconds_bucket&#123;le=&quot;0.003495251&quot;,&#125; 0.0</span><br><span class="line">recommend_timer_predict_seconds_bucket&#123;le=&quot;0.003844776&quot;,&#125; 0.0</span><br><span class="line">recommend_timer_predict_seconds_bucket&#123;le=&quot;0.004194304&quot;,&#125; 0.0</span><br><span class="line">recommend_timer_predict_seconds_bucket&#123;le=&quot;0.005592405&quot;,&#125; 0.0</span><br><span class="line">recommend_timer_predict_seconds_bucket&#123;le=&quot;0.006990506&quot;,&#125; 0.0</span><br><span class="line">recommend_timer_predict_seconds_bucket&#123;le=&quot;0.008388607&quot;,&#125; 0.0</span><br><span class="line">recommend_timer_predict_seconds_bucket&#123;le=&quot;0.009786708&quot;,&#125; 0.0</span><br><span class="line">recommend_timer_predict_seconds_bucket&#123;le=&quot;0.011184809&quot;,&#125; 0.0</span><br><span class="line">recommend_timer_predict_seconds_bucket&#123;le=&quot;0.01258291&quot;,&#125; 0.0</span><br><span class="line">recommend_timer_predict_seconds_bucket&#123;le=&quot;0.013981011&quot;,&#125; 0.0</span><br><span class="line">recommend_timer_predict_seconds_bucket&#123;le=&quot;0.015379112&quot;,&#125; 0.0</span><br><span class="line">recommend_timer_predict_seconds_bucket&#123;le=&quot;0.016777216&quot;,&#125; 0.0</span><br><span class="line">recommend_timer_predict_seconds_bucket&#123;le=&quot;0.022369621&quot;,&#125; 0.0</span><br><span class="line">recommend_timer_predict_seconds_bucket&#123;le=&quot;0.027962026&quot;,&#125; 0.0</span><br><span class="line">recommend_timer_predict_seconds_bucket&#123;le=&quot;0.033554431&quot;,&#125; 5.0</span><br><span class="line">recommend_timer_predict_seconds_bucket&#123;le=&quot;0.039146836&quot;,&#125; 5.0</span><br><span class="line">recommend_timer_predict_seconds_bucket&#123;le=&quot;0.044739241&quot;,&#125; 5.0</span><br></pre></td></tr></table></figure></p>
+<p>可以看到了多出了这些 bucket 相关的统计信息，基于这些统计信息我们就能得到更详细的耗时统计</p>
+<h2 id="prometheus"><a href="#prometheus" class="headerlink" title="prometheus"></a>prometheus</h2><p>关于 promethus 的详细介绍可以参考<a href="https://prometheus.io/docs/prometheus/latest/getting_started/" target="_blank" rel="noopener">官网文档</a>或者优质的<a href="https://yunlzheng.gitbook.io/prometheus-book/" target="_blank" rel="noopener">第三方文档</a>，这里我们直接说如何使用</p>
+<h3 id="使用-docker-安装"><a href="#使用-docker-安装" class="headerlink" title="使用 docker 安装"></a>使用 docker 安装</h3><p>定义 <code>prometheus.yml</code> 如下<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"># my global config</span><br><span class="line">global:</span><br><span class="line">  scrape_interval:     15s # Set the scrape interval to every 15 seconds. Default is every 1 minute.</span><br><span class="line">  evaluation_interval: 15s # Evaluate rules every 15 seconds. The default is every 1 minute.</span><br><span class="line">  # scrape_timeout is set to the global default (10s).</span><br><span class="line"></span><br><span class="line"># Load rules once and periodically evaluate them according to the global &apos;evaluation_interval&apos;.</span><br><span class="line">rule_files:</span><br><span class="line"># - &quot;first_rules.yml&quot;</span><br><span class="line"># - &quot;second_rules.yml&quot;</span><br><span class="line"></span><br><span class="line"># A scrape configuration containing exactly one endpoint to scrape:</span><br><span class="line"># Here it&apos;s Prometheus itself.</span><br><span class="line">scrape_configs:</span><br><span class="line">  # The job name is added as a label `job=&lt;job_name&gt;` to any timeseries scraped from this config.</span><br><span class="line">  - job_name: &apos;prometheus&apos;</span><br><span class="line"></span><br><span class="line">    # metrics_path defaults to &apos;/metrics&apos;</span><br><span class="line">    # scheme defaults to &apos;http&apos;.</span><br><span class="line">    static_configs:</span><br><span class="line">      - targets: [&apos;localhost:9090&apos;]</span><br><span class="line"></span><br><span class="line">  - job_name: &apos;actuator-demo&apos;</span><br><span class="line">    metrics_path: &apos;/actuator/prometheus&apos;</span><br><span class="line">    scrape_interval: 5s</span><br><span class="line">    static_configs:</span><br><span class="line">      - targets: [&apos;192.168.0.4:8080&apos;]</span><br></pre></td></tr></table></figure></p>
+<p>由于我们用 docker 方式启动 prometheus，因此 target 中的 ip 填写本机的 ip 地址</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker run -p 9090:9090 -v path_to_prometheus.yml:/etc/prometheus/prometheus.yml prom/prometheus</span><br></pre></td></tr></table></figure>
+<p>访问 localhost:9090 即可打开 prometheus 的 web 页面，并且能看到我们之前在程序中自定义的指标<br><img src="prometheus.png" alt="prometheus"><br><img src="metrics.png" alt="metrics"></p>
+<h2 id="grafana"><a href="#grafana" class="headerlink" title="grafana"></a>grafana</h2><p>grafana 可以对接多种数据源并且在一个 dashboard 中添加多个 panel 展示不同的数据，我们使用 docker 安装 grafana<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker run -d --name=grafana -p 3000:3000 grafana/grafana</span><br></pre></td></tr></table></figure></p>
+<p>然后登录 localhost:3000，默认的用户名和密码是 admin/admin，我们添加刚才的 prometheus 为数据源<br><img src="datasource.png" alt="datasource"><br>然后添加一个 query<br><img src="query.png" alt="query"></p>
+<p>使用 promQL 我们可以统计更多的指标</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"># 统计访问 /recommend 的 qps</span><br><span class="line">irate(http_server_requests_seconds_count&#123;uri=&apos;/recommend&apos;&#125;[1m])</span><br><span class="line"></span><br><span class="line"># 统计平均时间</span><br><span class="line">rate(http_server_requests_seconds_sum&#123;uri=&quot;/recommend&quot;&#125;[1m])/rate(http_server_requests_seconds_count&#123;uri=&quot;/recommend&quot;&#125;[1m])</span><br><span class="line"></span><br><span class="line"># 计算最大时间</span><br><span class="line">http_server_requests_seconds_max&#123;uri=&quot;/recommend&quot;&#125;</span><br><span class="line"></span><br><span class="line">## 计算TP95</span><br><span class="line">histogram_quantile(0.95, http_server_requests_seconds_bucket&#123;uri=&apos;/recommend&apos;&#125;)</span><br></pre></td></tr></table></figure>
+<p><img src="whole.png" alt="whole"></p>
+
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+      
+    
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/springboot/" rel="tag"># springboot</a>
+          
+            <a href="/tags/prometheus/" rel="tag"># prometheus</a>
+          
+            <a href="/tags/grafana/" rel="tag"># grafana</a>
+          
+            <a href="/tags/micrometer/" rel="tag"># micrometer</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2020/将你的应用部署在-K8S-上/" rel="next" title="将你的应用部署在 K8S 上">
+                <i class="fa fa-chevron-left"></i> 将你的应用部署在 K8S 上
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2020/聊聊-Mybatis-的-TypeHandler/" rel="prev" title="聊聊 Mybatis 的 TypeHandler">
+                聊聊 Mybatis 的 TypeHandler <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+  </div>
+
+
+          </div>
+          
+
+  
+    <div class="comments" id="comments">
+      <div id="disqus_thread">
+        <noscript>Please enable JavaScript to view the comments powered by Disqus.</noscript>
+      </div>
+    </div>
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image"
+                src="/uploads/avatar.jpg"
+                alt="Akisaya"/>
+            
+              <p class="site-author-name" itemprop="name">Akisaya</p>
+              <div class="site-description motion-element" itemprop="description">Take A Leap of Faith</div>
+          </div>
+
+          
+            <nav class="site-state motion-element">
+              
+                <div class="site-state-item site-state-posts">
+                
+                  <a href="/archives/">
+                
+                    <span class="site-state-item-count">12</span>
+                    <span class="site-state-item-name">posts</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-categories">
+                  
+                    
+                      <a href="/categories/">
+                    
+                  
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">5</span>
+                    <span class="site-state-item-name">categories</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-tags">
+                  
+                    
+                      <a href="/tags/">
+                    
+                  
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">19</span>
+                    <span class="site-state-item-name">tags</span>
+                  </a>
+                </div>
+              
+            </nav>
+          
+
+          
+
+          
+
+          
+            <div class="links-of-author motion-element">
+              
+                <span class="links-of-author-item">
+                  
+                  
+                    
+                  
+                  
+                    
+                  
+                  <a href="https://github.com/akisaya" title="GitHub &rarr; https://github.com/akisaya" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+                </span>
+              
+                <span class="links-of-author-item">
+                  
+                  
+                    
+                  
+                  
+                    
+                  
+                  <a href="mailto:akisaya@foxmail.com" title="E-Mail &rarr; mailto:akisaya@foxmail.com" rel="noopener" target="_blank"><i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                </span>
+              
+            </div>
+          
+
+          
+
+          
+          
+
+          
+            
+          
+          
+
+        </div>
+      </div>
+
+      
+      <!--noindex-->
+        <div class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+            
+            
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#springboot-actuator"><span class="nav-number">1.</span> <span class="nav-text">springboot actuator</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#引入-springboot-actuator"><span class="nav-number">1.1.</span> <span class="nav-text">引入 springboot actuator</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Micrometer"><span class="nav-number">1.2.</span> <span class="nav-text">Micrometer</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#单指标属性"><span class="nav-number">1.3.</span> <span class="nav-text">单指标属性</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#prometheus"><span class="nav-number">2.</span> <span class="nav-text">prometheus</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#使用-docker-安装"><span class="nav-number">2.1.</span> <span class="nav-text">使用 docker 安装</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#grafana"><span class="nav-number">3.</span> <span class="nav-text">grafana</span></a></li></ol></div>
+            
+
+          </div>
+        </div>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+  
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2020</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Akisaya</span>
+
+  
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> v3.7.1</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme – <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> v7.1.1</div>
+
+
+
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  
+    <span class="post-meta-item-icon">
+      <i class="fa fa-user"></i>
+    </span>
+    <span class="site-uv" title="Total Visitors">
+      <span class="busuanzi-value" id="busuanzi_value_site_uv"></span>
+    </span>
+  
+
+  
+    <span class="post-meta-divider">|</span>
+  
+
+  
+    <span class="post-meta-item-icon">
+      <i class="fa fa-eye"></i>
+    </span>
+    <span class="site-pv" title="Total Views">
+      <span class="busuanzi-value" id="busuanzi_value_site_pv"></span>
+    </span>
+  
+</div>
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+    
+
+    
+  </div>
+
+  
+
+<script>
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+
+  
+
+
+  <script src="/js/utils.js?v=7.1.1"></script>
+
+  <script src="/js/motion.js?v=7.1.1"></script>
+
+
+
+  
+  
+
+
+  <script src="/js/affix.js?v=7.1.1"></script>
+
+  <script src="/js/schemes/pisces.js?v=7.1.1"></script>
+
+
+
+  
+  <script src="/js/scrollspy.js?v=7.1.1"></script>
+<script src="/js/post-details.js?v=7.1.1"></script>
+
+
+
+  
+
+
+  <script src="/js/next-boot.js?v=7.1.1"></script>
+
+
+  
+
+  
+
+  
+
+  
+  
+  <script id="dsq-count-scr" src="https://akisaya.disqus.com/count.js" async></script>
+
+
+<script>
+  var disqus_config = function() {
+    this.page.url = "https://akisaya.github.io/2020/使用-springboot-actuator-prometheus-grafana-监控你的应用/";
+    this.page.identifier = "2020/使用-springboot-actuator-prometheus-grafana-监控你的应用/";
+    this.page.title = '使用 springboot actuator & prometheus & grafana 监控你的应用';
+    };
+  function loadComments() {
+    var d = document, s = d.createElement('script');
+    s.src = 'https://akisaya.disqus.com/embed.js';
+    s.setAttribute('data-timestamp', '' + +new Date());
+    (d.head || d.body).appendChild(s);
+  }
+  
+    loadComments();
+  
+</script>
+
+
+
+
+
+  
+
+
+  
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+  <script>
+    (function(){
+      var bp = document.createElement('script');
+      var curProtocol = window.location.protocol.split(':')[0];
+      bp.src = (curProtocol === 'https') ? 'https://zz.bdstatic.com/linksubmit/push.js' : 'http://push.zhanzhang.baidu.com/push.js';
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(bp, s);
+    })();
+  </script>
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+<script>
+  $('.highlight').not('.gist .highlight').each(function(i, e) {
+    var $wrap = $('<div>').addClass('highlight-wrap');
+    $(e).after($wrap);
+    $wrap.append($('<button>').addClass('copy-btn').append('Copy').on('click', function(e) {
+      var code = $(this).parent().find('.code').find('.line').map(function(i, e) {
+        return $(e).text();
+      }).toArray().join('\n');
+      var ta = document.createElement('textarea');
+      var yPosition = window.pageYOffset || document.documentElement.scrollTop;
+      ta.style.top = yPosition + 'px'; // Prevent page scroll
+      ta.style.position = 'absolute';
+      ta.style.opacity = '0';
+      ta.readOnly = true;
+      ta.value = code;
+      document.body.appendChild(ta);
+      ta.select();
+      ta.setSelectionRange(0, code.length);
+      ta.readOnly = false;
+      var result = document.execCommand('copy');
+      
+        if (result) $(this).text('Copied');
+        else $(this).text('Copy failed');
+      
+      ta.blur(); // For iOS
+      $(this).blur();
+    })).on('mouseleave', function(e) {
+      var $b = $(this).find('.copy-btn');
+      setTimeout(function() {
+        $b.text('Copy');
+      }, 300);
+    }).append(e);
+  })
+</script>
+
+
+  
+
+  
+
+</body>
+</html>

@@ -1,0 +1,1069 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<html class="theme-next pisces" lang="zh_CN">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2"/>
+<meta name="theme-color" content="#222"/>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2"/>
+
+<link rel="stylesheet" href="/css/main.css?v=7.1.1"/>
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=7.1.1">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=7.1.1">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=7.1.1">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=7.1.1" color="#222">
+
+
+
+
+
+
+
+<script id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '7.1.1',
+    sidebar: {"position":"left","display":"post","b2t":true},
+    back2top: true,
+    back2top_sidebar: false,
+    fancybox: false,
+    fastclick: false,
+    lazyload: false,
+    tabs: true,
+    motion: {"enable":false},
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+  
+
+
+
+
+  <meta name="description" content="Kubernetes（简称 K8S）自发布以来，已经成为容器化编排的最佳工具，本文通过一个简单的案例聊一聊如何将一个容器部署到 k8s 集群上，文中所需的代码和容器均在 GITHUB 上。如需要搭建一个 k8s 集群，可以通过 minikube 来搭建，也可以使用 docker for desktop 自带的 k8s 集群 1 创建一个最简单的 Deployment先简单介绍几个概念">
+<meta name="keywords" content="k8s,docker">
+<meta property="og:type" content="article">
+<meta property="og:title" content="将你的应用部署在 K8S 上">
+<meta property="og:url" content="https://akisaya.github.io/2020/将你的应用部署在-K8S-上/index.html">
+<meta property="og:site_name" content="Inspiration">
+<meta property="og:description" content="Kubernetes（简称 K8S）自发布以来，已经成为容器化编排的最佳工具，本文通过一个简单的案例聊一聊如何将一个容器部署到 k8s 集群上，文中所需的代码和容器均在 GITHUB 上。如需要搭建一个 k8s 集群，可以通过 minikube 来搭建，也可以使用 docker for desktop 自带的 k8s 集群 1 创建一个最简单的 Deployment先简单介绍几个概念">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://akisaya.github.io/2020/将你的应用部署在-K8S-上/pod.png">
+<meta property="og:image" content="https://akisaya.github.io/2020/将你的应用部署在-K8S-上/replica.png">
+<meta property="og:image" content="https://akisaya.github.io/2020/将你的应用部署在-K8S-上/deployment.png">
+<meta property="og:image" content="https://akisaya.github.io/2020/将你的应用部署在-K8S-上/deploy-config.png">
+<meta property="og:image" content="https://akisaya.github.io/2020/将你的应用部署在-K8S-上/service.png">
+<meta property="og:updated_time" content="2020-04-01T17:40:11.495Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="将你的应用部署在 K8S 上">
+<meta name="twitter:description" content="Kubernetes（简称 K8S）自发布以来，已经成为容器化编排的最佳工具，本文通过一个简单的案例聊一聊如何将一个容器部署到 k8s 集群上，文中所需的代码和容器均在 GITHUB 上。如需要搭建一个 k8s 集群，可以通过 minikube 来搭建，也可以使用 docker for desktop 自带的 k8s 集群 1 创建一个最简单的 Deployment先简单介绍几个概念">
+<meta name="twitter:image" content="https://akisaya.github.io/2020/将你的应用部署在-K8S-上/pod.png">
+
+
+
+
+
+  
+  
+  <link rel="canonical" href="https://akisaya.github.io/2020/将你的应用部署在-K8S-上/"/>
+
+
+
+<script id="page.configurations">
+  CONFIG.page = {
+    sidebar: "",
+  };
+</script>
+
+  <title>将你的应用部署在 K8S 上 | Inspiration</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .motion-element,
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-title { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh_CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Inspiration</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+    
+    
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="Toggle navigation bar">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  
+    <ul id="menu" class="menu">
+      
+        
+        
+        
+          
+          <li class="menu-item menu-item-home">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br/>Home</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-about">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/about/" rel="section"><i class="menu-item-icon fa fa-fw fa-user"></i> <br/>About</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-tags">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/tags/" rel="section"><i class="menu-item-icon fa fa-fw fa-tags"></i> <br/>Tags</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-categories">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br/>Categories</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-archives">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br/>Archives</a>
+
+  </li>
+
+      
+      
+    </ul>
+  
+
+  
+
+  
+</nav>
+
+
+
+  
+
+
+
+</div>
+    </header>
+
+    
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+            
+
+          
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://akisaya.github.io/2020/将你的应用部署在-K8S-上/"/>
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Akisaya"/>
+      <meta itemprop="description" content="Take A Leap of Faith"/>
+      <meta itemprop="image" content="/uploads/avatar.jpg"/>
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Inspiration"/>
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h2 class="post-title" itemprop="name headline">将你的应用部署在 K8S 上
+
+              
+            
+          </h2>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+
+              
+                
+              
+
+              <time title="Created: 2020-01-16 18:36:35" itemprop="dateCreated datePublished" datetime="2020-01-16T18:36:35+08:00">2020-01-16</time>
+            
+
+            
+              
+
+              
+                
+                <span class="post-meta-divider">|</span>
+                
+
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">Edited on</span>
+                
+                <time title="Modified: 2020-04-02 01:40:11" itemprop="dateModified" datetime="2020-04-02T01:40:11+08:00">2020-04-02</time>
+              
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/DevOps/" itemprop="url" rel="index"><span itemprop="name">DevOps</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+            
+              
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+            
+                <span class="post-meta-item-text">Comments: </span>
+                <a href="/2020/将你的应用部署在-K8S-上/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2020/将你的应用部署在-K8S-上/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+            <span class="post-meta-divider">|</span>
+            <span class="post-meta-item-icon"
+            >
+            <i class="fa fa-eye"></i>
+             Views:  
+            <span class="busuanzi-value" id="busuanzi_value_page_pv"></span>
+            </span>
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>Kubernetes（简称 K8S）自发布以来，已经成为容器化编排的最佳工具，本文通过一个简单的案例聊一聊如何将一个容器部署到 k8s 集群上，文中所需的代码和容器均在 <a href="https://github.com/AkisAya/simple-web-for-k8s-demo" target="_blank" rel="noopener">GITHUB</a> 上。如需要搭建一个 k8s 集群，可以通过 <a href="https://github.com/kubernetes/minikube" target="_blank" rel="noopener">minikube</a> 来搭建，也可以使用 docker for desktop 自带的 k8s 集群</p>
+<h2 id="1-创建一个最简单的-Deployment"><a href="#1-创建一个最简单的-Deployment" class="headerlink" title="1 创建一个最简单的 Deployment"></a>1 创建一个最简单的 Deployment</h2><p>先简单介绍几个概念<br><a id="more"></a></p>
+<ul>
+<li>Pod: k8s 最核心的一个概念，是一个或多个 container 的集合。一个 pod 中的 container 共享存储和网络，k8s 支持多种 contianer，但是目前 docker container 是最常见的一种。我们的应用最终都是各个 pod 的形式存在的，pod 也是 k8s 进行调度的最小单位。<br><img src="pod.png" alt="pod"></li>
+<li>ReplicaSet: 也是 k8s 中的一种资源，管理一个 pod 的多个副本。一般我们部署 pod 为了保证高可用，都会部署多个副本，避免单点故障。如果 replicaSet 管理的某个 pod 挂掉了，它会请求一个新的 pod 出来以满足设定的副本数量。k8s 还有一个 ReplicaionController 也是控制 pod 副本的，但是相比 ReplicaionController，ReplicaSet 对 pod 标签的支持会更好，现在一般就用 ReplicaSet<br><img src="replica.png" alt="replica"></li>
+<li>Deployment: 是一个更 high-level 的资源，创建一个 Deployment 后会创建一个 ReplicaSet，然后 ReplicaSet 会创建预期数量的 pod。deployment 可以对 ReplicaSet 的版本进行管理，方便回滚。在生产上一般都是创建一个 Deployment<br><img src="deployment.png" alt="depolyment"></li>
+</ul>
+<p>我们先准备一个简单的 web 应用 simple-web，并将其打包成 docker 镜像 simple-web:1.0。web 应用后，访问 <code>/index</code>，将会输出 web 应用的名字，访问 <code>/health</code>，会返回 “OK”<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">&gt; curl http://ip:8080/index</span><br><span class="line">  web site name is [demo-web]</span><br><span class="line">&gt; curl http://ip:8080/health</span><br><span class="line">  OK</span><br></pre></td></tr></table></figure></p>
+<p>定义一个 <code>deployment.yml</code> 如下<br><img src="deploy-config.png" alt="config"><br>使用 <code>kubectl create -f deployment.yml</code>，然后 get 资源可以发现我们创建了一个 deployment，一个 replicaset，一个 pod<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">➜  ~ k get deploy</span><br><span class="line">NAME         READY   UP-TO-DATE   AVAILABLE   AGE</span><br><span class="line">simple-web   1/1     1            1           2d4h</span><br><span class="line">➜  ~ k get rs</span><br><span class="line">NAME                    DESIRED   CURRENT   READY   AGE</span><br><span class="line">simple-web-6bdf7b4d84   1         1         1       47h</span><br><span class="line">➜  ~ k get pods</span><br><span class="line">NAME                          READY   STATUS    RESTARTS   AGE</span><br><span class="line">simple-web-6bdf7b4d84-p7jkp   1/1     Running   0          47h</span><br></pre></td></tr></table></figure></p>
+<p>我们可以进入到 pod 中执行 curl 命令查看输出，也可以把 curl 命令传递给 kubectl exec<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">➜  ~ k exec  simple-web-6bdf7b4d84-p7jkp --  curl -s http://localhost:8080/index</span><br><span class="line">web site name is [demo-web]</span><br></pre></td></tr></table></figure></p>
+<h2 id="2-使用-service-访问-pod"><a href="#2-使用-service-访问-pod" class="headerlink" title="2 使用 service 访问 pod"></a>2 使用 service 访问 pod</h2><h3 id="2-1-port-forward"><a href="#2-1-port-forward" class="headerlink" title="2.1 port-forward"></a>2.1 port-forward</h3><p>仅仅是创建一个 Deployment，我们还只能在 pod 内访问自己的 web 服务，而无法在外部或者 pod 之间访问 web 服务。<code>kubectl port-forward &lt;podname&gt; &lt;hostPort:containerPort&gt;</code> 可以将宿主机的一个 port 代理到容器的一个 pod 上，使我们在宿主机上访问 web 服务<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">➜  ~ k port-forward simple-web-6bdf7b4d84-p7jkp 8889:8080</span><br><span class="line">Forwarding from 127.0.0.1:8889 -&gt; 8080</span><br><span class="line">Forwarding from [::1]:8889 -&gt; 8080</span><br><span class="line"></span><br><span class="line">➜  ~ curl 127.0.0.1:8889/index</span><br><span class="line">web site name is [demo-web]</span><br></pre></td></tr></table></figure></p>
+<h3 id="2-2-service"><a href="#2-2-service" class="headerlink" title="2.2 service"></a>2.2 service</h3><p>但是当我们有多个副本的 pod 时，我们不可能一个一个 pod 的代理指定端口，同时 port-forward 也没解决 pod 之间的服务发现。这个时候我们需要 <code>Service</code> 来提供路由<br><img src="service.png" alt="service"><br>我们同样使用 <code></code>kubectl create<code>创建一个</code>Service`<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">apiVersion: v1</span><br><span class="line">kind: Service</span><br><span class="line">metadata:</span><br><span class="line">  name: simple-web</span><br><span class="line">spec:</span><br><span class="line">  selector:</span><br><span class="line">    app: simple-web</span><br><span class="line">  ports:</span><br><span class="line">    - protocol: TCP</span><br><span class="line">      port: 80</span><br><span class="line">      targetPort: 8080</span><br></pre></td></tr></table></figure></p>
+<p>这里 selector 我们需要填写在 deployment 中定义的 pod 的标签<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">➜  ~ k get svc</span><br><span class="line">NAME                  TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)        AGE</span><br><span class="line">simple-web            ClusterIP   10.96.156.194   &lt;none&gt;        80/TCP         2d4h</span><br></pre></td></tr></table></figure></p>
+<p>我们创建了一个叫 <code>simple-web</code> 的 service，可以看到 k8s 分配了一个 clusterIP，并将这个 ip 的 80 端口映射到 pod 的 8080 端口<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">➜  ~ curl 10.96.156.194/index</span><br><span class="line">web site name is [demo-web]</span><br></pre></td></tr></table></figure></p>
+<p>除了用 ip 访问，我们也可以用 serivce 来访问<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">➜  ~ k exec simple-web-6bdf7b4d84-2kzxx -- curl http://simple-web/index</span><br><span class="line">web site name is [demo-web]</span><br></pre></td></tr></table></figure></p>
+<h3 id="2-3-nodeport"><a href="#2-3-nodeport" class="headerlink" title="2.3 nodeport"></a>2.3 nodeport</h3><p>使用 ClusterIP 我们只能在 k8s 集群内访问 pod，如果要从外部访问 pod，则可以定义 NodePort type 的 Service<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">apiVersion: v1</span><br><span class="line">kind: Service</span><br><span class="line">metadata:</span><br><span class="line">  name: simple-web</span><br><span class="line">spec:</span><br><span class="line">  type: NodePort</span><br><span class="line">  selector:</span><br><span class="line">    app: simple-web</span><br><span class="line">  ports:</span><br><span class="line">    - protocol: TCP</span><br><span class="line">      port: 80</span><br><span class="line">      targetPort: 8080</span><br><span class="line">      nodePort: 32100</span><br></pre></td></tr></table></figure></p>
+<p>这样我们就可以通过宿主机 ip:nodeport 访问 pod 中的 web 服务了<br>Service 还提供了 LoadBalancer 的 type，方便提供一个 external 的 ip 供访问，一般为云厂商使用，此处不表</p>
+<h2 id="3-Volume"><a href="#3-Volume" class="headerlink" title="3 Volume"></a>3 Volume</h2><p>Volume 提供了一种在 pod 的 container 之间数据交互，container 与宿主机或者其它的存储交互的手段。k8s 的 Volume 有很多类型，下面以 EmptyDir 为例看看 Volume 的使用。<br>我们将 web 应用的 log 挂载到 EmptyDir，配置如下<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">apiVersion: apps/v1</span><br><span class="line">kind: Deployment</span><br><span class="line">metadata:</span><br><span class="line">  name: simple-web</span><br><span class="line">spec:</span><br><span class="line">  replicas: 1</span><br><span class="line">  selector:</span><br><span class="line">    matchLabels:</span><br><span class="line">      app: simple-web</span><br><span class="line">  template:</span><br><span class="line">    metadata:</span><br><span class="line">      labels:</span><br><span class="line">        app: simple-web</span><br><span class="line">    spec:</span><br><span class="line">      containers:</span><br><span class="line">        - name: simple-web</span><br><span class="line">          image: simple-web:1.0</span><br><span class="line">          volumeMounts:</span><br><span class="line">            - name: app-log</span><br><span class="line">              mountPath: /app/logs</span><br><span class="line">      volumes:</span><br><span class="line">        - name: app-log</span><br><span class="line">          emptyDir: &#123;&#125;</span><br></pre></td></tr></table></figure></p>
+<p>我们可以在宿主机上找到 emptyDir 的路径，默认是 <code>/var/lib/kubelet/pods/PODUID/volumes/kubernetes.io~empty-dir/VOLUMENAME</code><br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">➜  ~ k get pods simple-web-6bdf7b4d84-2kzxx -o yaml | grep uid</span><br><span class="line">    uid: 437573bc-7398-4004-89ac-0d268e986c74</span><br><span class="line">  uid: be609483-ed6d-427f-b277-81931cc9eb60</span><br></pre></td></tr></table></figure></p>
+<p><code>be609483-ed6d-427f-b277-81931cc9eb60</code> 就是 pod uid<br>以这个 log 为例，我们宿主机上的 log 可以通过 filebeat 收集起来</p>
+<h2 id="4-configmap"><a href="#4-configmap" class="headerlink" title="4 configmap"></a>4 configmap</h2><p>当我们把应用部署到 pod 后，如果希望通过更改配置更改应用的行为，肯定不希望是需要重新打包一个镜像，所以我们需要把配置文件分离出来，configmap 就可以帮助我们完成这个事<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">apiVersion: v1</span><br><span class="line">kind: ConfigMap</span><br><span class="line">metadata:</span><br><span class="line">  name: simple-web-config</span><br><span class="line">data:</span><br><span class="line">  app-config: |-</span><br><span class="line">    app.name=web-name-from-config-web</span><br></pre></td></tr></table></figure></p>
+<p>然后修改 deployment 如下<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line">apiVersion: apps/v1</span><br><span class="line">kind: Deployment</span><br><span class="line">metadata:</span><br><span class="line">  name: simple-web</span><br><span class="line">spec:</span><br><span class="line">  replicas: 1</span><br><span class="line">  selector:</span><br><span class="line">    matchLabels:</span><br><span class="line">      app: simple-web</span><br><span class="line">  template:</span><br><span class="line">    metadata:</span><br><span class="line">      labels:</span><br><span class="line">        app: simple-web</span><br><span class="line">    spec:</span><br><span class="line">      containers:</span><br><span class="line">        - name: simple-web</span><br><span class="line">          image: simple-web:1.0</span><br><span class="line">          volumeMounts:</span><br><span class="line">            - name: app-log-vol</span><br><span class="line">              mountPath: /app/logs</span><br><span class="line">            - name: config-vol</span><br><span class="line">              mountPath: /app/conf/application.properties</span><br><span class="line">              subPath: application.properties</span><br><span class="line">      volumes:</span><br><span class="line">        - name: app-log-vol</span><br><span class="line">          emptyDir: &#123;&#125;</span><br><span class="line">        - name: config-vol</span><br><span class="line">          configMap:</span><br><span class="line">            name: simple-web-config</span><br><span class="line">            items:</span><br><span class="line">              - key: app-config</span><br><span class="line">                path: application.properties</span><br></pre></td></tr></table></figure></p>
+<p>我们把 configmap 里的配置挂载到了 <code>/app/conf/application.properties</code>，我们应用的启动脚本会读取这个配置文件 <code>java -jar simple-web.jar --spring.config.location=/app/conf/application.properties</code>，通过这种方式，我们就将配置文件与应用分离。修改配置文件后，<code>application.properties</code> 就已经被更新了，但是由于 java 应用不会重新加载配置文件，所以需要重启 pod</p>
+<h2 id="5-liveness-readiness-与-pod-resources"><a href="#5-liveness-readiness-与-pod-resources" class="headerlink" title="5 liveness, readiness 与 pod resources"></a>5 liveness, readiness 与 pod resources</h2><h3 id="5-1-liveness-readiness"><a href="#5-1-liveness-readiness" class="headerlink" title="5.1 liveness, readiness"></a>5.1 liveness, readiness</h3><p>k8s 是如何知道一个 pod 无法提供服务了呢？我们需要定义一个健康检查的 liveness ，k8s 会定期请求这个 liveness，判断服务是否健康。<br>readiness 类似，通过 readiness 的定义判读 pod 是否已经可以开始提供服务</p>
+<h3 id="5-2-resources"><a href="#5-2-resources" class="headerlink" title="5.2 resources"></a>5.2 resources</h3><p>k8s 提供了限制 container 所能使用的资源量的方法。<code>resources.requests</code> 定义了需要多少资源，用于 k8s 将 pod 调度到资源充足的节点，<code>resources.limits</code> 则限制了 container 可以使用的资源总量。可参考<a href="https://medium.com/expedia-group-tech/kubernetes-container-resource-requirements-part-1-memory-a9fbe02c8a5f" target="_blank" rel="noopener">Kubernetes Container Resource Requirements</a><br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br></pre></td><td class="code"><pre><span class="line">apiVersion: apps/v1</span><br><span class="line">kind: Deployment</span><br><span class="line">metadata:</span><br><span class="line">  name: simple-web</span><br><span class="line">spec:</span><br><span class="line">  replicas: 1</span><br><span class="line">  selector:</span><br><span class="line">    matchLabels:</span><br><span class="line">      app: simple-web</span><br><span class="line">  template:</span><br><span class="line">    metadata:</span><br><span class="line">      labels:</span><br><span class="line">        app: simple-web</span><br><span class="line">    spec:</span><br><span class="line">      containers:</span><br><span class="line">        - name: simple-web</span><br><span class="line">          image: simple-web:1.0</span><br><span class="line">          livenessProbe:</span><br><span class="line">            httpGet:</span><br><span class="line">              path: /health</span><br><span class="line">              port: 8080</span><br><span class="line">          readinessProbe:</span><br><span class="line">            httpGet:</span><br><span class="line">              path: /health</span><br><span class="line">              port: 8080</span><br><span class="line">          volumeMounts:</span><br><span class="line">            - name: app-log-vol</span><br><span class="line">              mountPath: /app/logs</span><br><span class="line">            - name: config-vol</span><br><span class="line">              mountPath: /app/conf/application.properties</span><br><span class="line">              subPath: application.properties</span><br><span class="line">          resources:</span><br><span class="line">              requests:</span><br><span class="line">                memory: 2048Mi</span><br><span class="line">                cpu: 2</span><br><span class="line">              limits:</span><br><span class="line">                memory: 2048Mi</span><br><span class="line">                cpu: 2</span><br><span class="line">      volumes:</span><br><span class="line">        - name: app-log-vol</span><br><span class="line">          emptyDir: &#123;&#125;</span><br><span class="line">        - name: config-vol</span><br><span class="line">          configMap:</span><br><span class="line">            name: simple-web-config</span><br><span class="line">            items:</span><br><span class="line">              - key: app-config</span><br><span class="line">                path: application.properties</span><br></pre></td></tr></table></figure></p>
+<h2 id="6-其它待补充，pause-容器等，dashboard"><a href="#6-其它待补充，pause-容器等，dashboard" class="headerlink" title="6 其它待补充，pause 容器等，dashboard"></a>6 其它待补充，pause 容器等，dashboard</h2>
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+      
+    
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/k8s/" rel="tag"># k8s</a>
+          
+            <a href="/tags/docker/" rel="tag"># docker</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/Ngnix-流量拷贝/" rel="next" title="Ngnix 流量拷贝">
+                <i class="fa fa-chevron-left"></i> Ngnix 流量拷贝
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2020/使用-springboot-actuator-prometheus-grafana-监控你的应用/" rel="prev" title="使用 springboot actuator & prometheus & grafana 监控你的应用">
+                使用 springboot actuator & prometheus & grafana 监控你的应用 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+  </div>
+
+
+          </div>
+          
+
+  
+    <div class="comments" id="comments">
+      <div id="disqus_thread">
+        <noscript>Please enable JavaScript to view the comments powered by Disqus.</noscript>
+      </div>
+    </div>
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image"
+                src="/uploads/avatar.jpg"
+                alt="Akisaya"/>
+            
+              <p class="site-author-name" itemprop="name">Akisaya</p>
+              <div class="site-description motion-element" itemprop="description">Take A Leap of Faith</div>
+          </div>
+
+          
+            <nav class="site-state motion-element">
+              
+                <div class="site-state-item site-state-posts">
+                
+                  <a href="/archives/">
+                
+                    <span class="site-state-item-count">12</span>
+                    <span class="site-state-item-name">posts</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-categories">
+                  
+                    
+                      <a href="/categories/">
+                    
+                  
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">5</span>
+                    <span class="site-state-item-name">categories</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-tags">
+                  
+                    
+                      <a href="/tags/">
+                    
+                  
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">19</span>
+                    <span class="site-state-item-name">tags</span>
+                  </a>
+                </div>
+              
+            </nav>
+          
+
+          
+
+          
+
+          
+            <div class="links-of-author motion-element">
+              
+                <span class="links-of-author-item">
+                  
+                  
+                    
+                  
+                  
+                    
+                  
+                  <a href="https://github.com/akisaya" title="GitHub &rarr; https://github.com/akisaya" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+                </span>
+              
+                <span class="links-of-author-item">
+                  
+                  
+                    
+                  
+                  
+                    
+                  
+                  <a href="mailto:akisaya@foxmail.com" title="E-Mail &rarr; mailto:akisaya@foxmail.com" rel="noopener" target="_blank"><i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                </span>
+              
+            </div>
+          
+
+          
+
+          
+          
+
+          
+            
+          
+          
+
+        </div>
+      </div>
+
+      
+      <!--noindex-->
+        <div class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+            
+            
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-创建一个最简单的-Deployment"><span class="nav-number">1.</span> <span class="nav-text">1 创建一个最简单的 Deployment</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-使用-service-访问-pod"><span class="nav-number">2.</span> <span class="nav-text">2 使用 service 访问 pod</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#2-1-port-forward"><span class="nav-number">2.1.</span> <span class="nav-text">2.1 port-forward</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-2-service"><span class="nav-number">2.2.</span> <span class="nav-text">2.2 service</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-3-nodeport"><span class="nav-number">2.3.</span> <span class="nav-text">2.3 nodeport</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-Volume"><span class="nav-number">3.</span> <span class="nav-text">3 Volume</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-configmap"><span class="nav-number">4.</span> <span class="nav-text">4 configmap</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-liveness-readiness-与-pod-resources"><span class="nav-number">5.</span> <span class="nav-text">5 liveness, readiness 与 pod resources</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#5-1-liveness-readiness"><span class="nav-number">5.1.</span> <span class="nav-text">5.1 liveness, readiness</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-2-resources"><span class="nav-number">5.2.</span> <span class="nav-text">5.2 resources</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#6-其它待补充，pause-容器等，dashboard"><span class="nav-number">6.</span> <span class="nav-text">6 其它待补充，pause 容器等，dashboard</span></a></li></ol></div>
+            
+
+          </div>
+        </div>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+  
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2020</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Akisaya</span>
+
+  
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> v3.7.1</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme – <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> v7.1.1</div>
+
+
+
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  
+    <span class="post-meta-item-icon">
+      <i class="fa fa-user"></i>
+    </span>
+    <span class="site-uv" title="Total Visitors">
+      <span class="busuanzi-value" id="busuanzi_value_site_uv"></span>
+    </span>
+  
+
+  
+    <span class="post-meta-divider">|</span>
+  
+
+  
+    <span class="post-meta-item-icon">
+      <i class="fa fa-eye"></i>
+    </span>
+    <span class="site-pv" title="Total Views">
+      <span class="busuanzi-value" id="busuanzi_value_site_pv"></span>
+    </span>
+  
+</div>
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+    
+
+    
+  </div>
+
+  
+
+<script>
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+
+  
+
+
+  <script src="/js/utils.js?v=7.1.1"></script>
+
+  <script src="/js/motion.js?v=7.1.1"></script>
+
+
+
+  
+  
+
+
+  <script src="/js/affix.js?v=7.1.1"></script>
+
+  <script src="/js/schemes/pisces.js?v=7.1.1"></script>
+
+
+
+  
+  <script src="/js/scrollspy.js?v=7.1.1"></script>
+<script src="/js/post-details.js?v=7.1.1"></script>
+
+
+
+  
+
+
+  <script src="/js/next-boot.js?v=7.1.1"></script>
+
+
+  
+
+  
+
+  
+
+  
+  
+  <script id="dsq-count-scr" src="https://akisaya.disqus.com/count.js" async></script>
+
+
+<script>
+  var disqus_config = function() {
+    this.page.url = "https://akisaya.github.io/2020/将你的应用部署在-K8S-上/";
+    this.page.identifier = "2020/将你的应用部署在-K8S-上/";
+    this.page.title = '将你的应用部署在 K8S 上';
+    };
+  function loadComments() {
+    var d = document, s = d.createElement('script');
+    s.src = 'https://akisaya.disqus.com/embed.js';
+    s.setAttribute('data-timestamp', '' + +new Date());
+    (d.head || d.body).appendChild(s);
+  }
+  
+    loadComments();
+  
+</script>
+
+
+
+
+
+  
+
+
+  
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+  <script>
+    (function(){
+      var bp = document.createElement('script');
+      var curProtocol = window.location.protocol.split(':')[0];
+      bp.src = (curProtocol === 'https') ? 'https://zz.bdstatic.com/linksubmit/push.js' : 'http://push.zhanzhang.baidu.com/push.js';
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(bp, s);
+    })();
+  </script>
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+<script>
+  $('.highlight').not('.gist .highlight').each(function(i, e) {
+    var $wrap = $('<div>').addClass('highlight-wrap');
+    $(e).after($wrap);
+    $wrap.append($('<button>').addClass('copy-btn').append('Copy').on('click', function(e) {
+      var code = $(this).parent().find('.code').find('.line').map(function(i, e) {
+        return $(e).text();
+      }).toArray().join('\n');
+      var ta = document.createElement('textarea');
+      var yPosition = window.pageYOffset || document.documentElement.scrollTop;
+      ta.style.top = yPosition + 'px'; // Prevent page scroll
+      ta.style.position = 'absolute';
+      ta.style.opacity = '0';
+      ta.readOnly = true;
+      ta.value = code;
+      document.body.appendChild(ta);
+      ta.select();
+      ta.setSelectionRange(0, code.length);
+      ta.readOnly = false;
+      var result = document.execCommand('copy');
+      
+        if (result) $(this).text('Copied');
+        else $(this).text('Copy failed');
+      
+      ta.blur(); // For iOS
+      $(this).blur();
+    })).on('mouseleave', function(e) {
+      var $b = $(this).find('.copy-btn');
+      setTimeout(function() {
+        $b.text('Copy');
+      }, 300);
+    }).append(e);
+  })
+</script>
+
+
+  
+
+  
+
+</body>
+</html>

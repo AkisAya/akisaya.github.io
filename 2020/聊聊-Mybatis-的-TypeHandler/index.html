@@ -1,0 +1,1082 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<html class="theme-next pisces" lang="zh_CN">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2"/>
+<meta name="theme-color" content="#222"/>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2"/>
+
+<link rel="stylesheet" href="/css/main.css?v=7.1.1"/>
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=7.1.1">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=7.1.1">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=7.1.1">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=7.1.1" color="#222">
+
+
+
+
+
+
+
+<script id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '7.1.1',
+    sidebar: {"position":"left","display":"post","b2t":true},
+    back2top: true,
+    back2top_sidebar: false,
+    fancybox: false,
+    fastclick: false,
+    lazyload: false,
+    tabs: true,
+    motion: {"enable":false},
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+  
+
+
+
+
+  <meta name="description" content="Mybatis 的 TypeHandler 是用来将 JavaBean 的属性与数据库中的字段值互相转换的，如果我们的 JavaBean 的属性是简单的属性如 String, Integer, Enum 等，我们一般不用关心 Mybatis 的 TypeHandler，但是如果我们需要将 JavaBean 的复杂对象作为一个字段值存储在数据表中，则需要自定义 TypeHandler 来处理值的映射">
+<meta name="keywords" content="源码,mybaits">
+<meta property="og:type" content="article">
+<meta property="og:title" content="聊聊 Mybatis 的 TypeHandler">
+<meta property="og:url" content="https://akisaya.github.io/2020/聊聊-Mybatis-的-TypeHandler/index.html">
+<meta property="og:site_name" content="Inspiration">
+<meta property="og:description" content="Mybatis 的 TypeHandler 是用来将 JavaBean 的属性与数据库中的字段值互相转换的，如果我们的 JavaBean 的属性是简单的属性如 String, Integer, Enum 等，我们一般不用关心 Mybatis 的 TypeHandler，但是如果我们需要将 JavaBean 的复杂对象作为一个字段值存储在数据表中，则需要自定义 TypeHandler 来处理值的映射">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://akisaya.github.io/2020/聊聊-Mybatis-的-TypeHandler/error1.png">
+<meta property="og:image" content="https://akisaya.github.io/2020/聊聊-Mybatis-的-TypeHandler/error2.png">
+<meta property="og:updated_time" content="2020-04-01T17:40:11.499Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="聊聊 Mybatis 的 TypeHandler">
+<meta name="twitter:description" content="Mybatis 的 TypeHandler 是用来将 JavaBean 的属性与数据库中的字段值互相转换的，如果我们的 JavaBean 的属性是简单的属性如 String, Integer, Enum 等，我们一般不用关心 Mybatis 的 TypeHandler，但是如果我们需要将 JavaBean 的复杂对象作为一个字段值存储在数据表中，则需要自定义 TypeHandler 来处理值的映射">
+<meta name="twitter:image" content="https://akisaya.github.io/2020/聊聊-Mybatis-的-TypeHandler/error1.png">
+
+
+
+
+
+  
+  
+  <link rel="canonical" href="https://akisaya.github.io/2020/聊聊-Mybatis-的-TypeHandler/"/>
+
+
+
+<script id="page.configurations">
+  CONFIG.page = {
+    sidebar: "",
+  };
+</script>
+
+  <title>聊聊 Mybatis 的 TypeHandler | Inspiration</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .motion-element,
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-title { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh_CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Inspiration</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+    
+    
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="Toggle navigation bar">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  
+    <ul id="menu" class="menu">
+      
+        
+        
+        
+          
+          <li class="menu-item menu-item-home">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br/>Home</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-about">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/about/" rel="section"><i class="menu-item-icon fa fa-fw fa-user"></i> <br/>About</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-tags">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/tags/" rel="section"><i class="menu-item-icon fa fa-fw fa-tags"></i> <br/>Tags</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-categories">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br/>Categories</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-archives">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br/>Archives</a>
+
+  </li>
+
+      
+      
+    </ul>
+  
+
+  
+
+  
+</nav>
+
+
+
+  
+
+
+
+</div>
+    </header>
+
+    
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+            
+
+          
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://akisaya.github.io/2020/聊聊-Mybatis-的-TypeHandler/"/>
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Akisaya"/>
+      <meta itemprop="description" content="Take A Leap of Faith"/>
+      <meta itemprop="image" content="/uploads/avatar.jpg"/>
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Inspiration"/>
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h2 class="post-title" itemprop="name headline">聊聊 Mybatis 的 TypeHandler
+
+              
+            
+          </h2>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+
+              
+                
+              
+
+              <time title="Created: 2020-04-01 18:36:35" itemprop="dateCreated datePublished" datetime="2020-04-01T18:36:35+08:00">2020-04-01</time>
+            
+
+            
+              
+
+              
+                
+                <span class="post-meta-divider">|</span>
+                
+
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">Edited on</span>
+                
+                <time title="Modified: 2020-04-02 01:40:11" itemprop="dateModified" datetime="2020-04-02T01:40:11+08:00">2020-04-02</time>
+              
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/java/" itemprop="url" rel="index"><span itemprop="name">java</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+            
+              
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+            
+                <span class="post-meta-item-text">Comments: </span>
+                <a href="/2020/聊聊-Mybatis-的-TypeHandler/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2020/聊聊-Mybatis-的-TypeHandler/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+            <span class="post-meta-divider">|</span>
+            <span class="post-meta-item-icon"
+            >
+            <i class="fa fa-eye"></i>
+             Views:  
+            <span class="busuanzi-value" id="busuanzi_value_page_pv"></span>
+            </span>
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>Mybatis 的 TypeHandler 是用来将 JavaBean 的属性与数据库中的字段值互相转换的，如果我们的 JavaBean 的属性是简单的属性如 String, Integer, Enum 等，我们一般不用关心 Mybatis 的 TypeHandler，但是如果我们需要将 JavaBean 的复杂对象作为一个字段值存储在数据表中，则需要自定义 TypeHandler 来处理值的映射，比较常见的处理是将复杂对象转换成一个 Json 字符串存储在数据库中，因此需要自定义 JsonTypeHandler，并且我们希望这个 JsonTypeHandler 能够处理泛型。</p>
+<p>但是最近写一个代码的时候发现 Mybatis 对于 JavaBean 的一个 Map 属性去获取对应的 TypeHandler 时拿错了泛型对应的类型，促使我看了看 Mybatis 到底是如何加载 TypeHandler，如果获取 TypeHandler，如果获取的<br><a id="more"></a></p>
+<h2 id="1-起因"><a href="#1-起因" class="headerlink" title="1 起因"></a>1 起因</h2><p>在一个 springboot 项目里，在 application.properteis 文件中配置了 typehandler 的 package<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mybatis.type-handlers-package=me.aki.demo.mybatisdemo.typehandler</span><br></pre></td></tr></table></figure></p>
+<p>并定义了如下 JsonTypeHandler<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line">@MappedJdbcTypes(JdbcType.VARCHAR)</span><br><span class="line">@MappedTypes(&#123;Map.class, List.class, ChartType.class, GraphType.class, DatasourceMeta.class&#125;)</span><br><span class="line">public class JsonTypeHandler&lt;T&gt; extends BaseTypeHandler&lt;T&gt; &#123;</span><br><span class="line">    private final Class&lt;T&gt; type;</span><br><span class="line"></span><br><span class="line">    public JsonTypeHandler(final Class&lt;T&gt; type) &#123;</span><br><span class="line">        this.type = type;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public void setNonNullParameter(PreparedStatement ps, int i, T parameter, JdbcType jdbcType) throws SQLException &#123;</span><br><span class="line">        ps.setString(i, serializeAsJsonString(parameter));</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public T getNullableResult(ResultSet rs, String columnName) throws SQLException &#123;</span><br><span class="line">        return deserializeFromJson(rs.getString(columnName), type);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public T getNullableResult(ResultSet rs, int columnIndex) throws SQLException &#123;</span><br><span class="line">        return deserializeFromJson(rs.getString(columnIndex), type);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public T getNullableResult(CallableStatement cs, int columnIndex) throws SQLException &#123;</span><br><span class="line">        return deserializeFromJson(cs.getString(columnIndex), type);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>定义了一个 Mapper 类以及 getById 的方法<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">@Select(&quot;select * from chart where id = #&#123;chartId&#125;&quot;)</span><br><span class="line">@Results(&#123;</span><br><span class="line">        @Result(column = &quot;type&quot;, property = &quot;type&quot;, typeHandler = ChartTypeHandler.class),</span><br><span class="line">        @Result(column = &quot;graph_styles&quot;, property = &quot;graphStyles&quot;, typeHandler = GraphStylesTypeHandler.class),</span><br><span class="line">        @Result(column = &quot;series_display_name&quot;, property = &quot;seriesDisplayName&quot;, typeHandler = JsonTypeHandler.class),</span><br><span class="line">        @Result(column = &quot;stats&quot;, property = &quot;stats&quot;, typeHandler = StatsTypeHandler.class),</span><br><span class="line">        @Result(column = &quot;headers&quot;, property = &quot;headers&quot;, typeHandler = HeadersTypeHandler.class),</span><br><span class="line">        @Result(column = &quot;datasource_meta&quot;, property = &quot;datasourceMeta&quot;, typeHandler = DataSourceMetaTypeHandler.class),</span><br><span class="line">        @Result(column = &quot;top_cells&quot;, property = &quot;topCells&quot;, typeHandler = TopCellsTypeHandler.class),</span><br><span class="line">&#125;)</span><br><span class="line">Chart getById(@Param(&quot;chartId&quot;) Integer chartId);</span><br></pre></td></tr></table></figure></p>
+<p>然后调用 getById 的方法时报了如下的错误<br><img src="error1.png" alt="error"><br>再 debug 一下发现是 mybatis 在设置 seriesDisplayName 这个属性时虽然使用了 JsonTypeHandler 但是泛型却错了<br><img src="error2.png" alt="error"></p>
+<h2 id="2-Mybatis-TypeHandler-的注册"><a href="#2-Mybatis-TypeHandler-的注册" class="headerlink" title="2 Mybatis TypeHandler 的注册"></a>2 Mybatis TypeHandler 的注册</h2><p>TypeHandler 的注册都是通过 TypeHandlerRegistry 这个类完成的，mybatis 已经预先定义了一些常用的 typehandler，需要特别注意的是 <code>TYPE_HANDLER_MAP</code> 和 <code>ALL_TYPE_HANDLERS_MAP</code>这两个属性<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">private final Map&lt;JdbcType, TypeHandler&lt;?&gt;&gt; JDBC_TYPE_HANDLER_MAP = new EnumMap&lt;JdbcType, TypeHandler&lt;?&gt;&gt;(JdbcType.class);</span><br><span class="line">private final Map&lt;Type, Map&lt;JdbcType, TypeHandler&lt;?&gt;&gt;&gt; TYPE_HANDLER_MAP = new ConcurrentHashMap&lt;Type, Map&lt;JdbcType, TypeHandler&lt;?&gt;&gt;&gt;();</span><br><span class="line">private final TypeHandler&lt;Object&gt; UNKNOWN_TYPE_HANDLER = new UnknownTypeHandler(this);</span><br><span class="line">private final Map&lt;Class&lt;?&gt;, TypeHandler&lt;?&gt;&gt; ALL_TYPE_HANDLERS_MAP = new HashMap&lt;Class&lt;?&gt;, TypeHandler&lt;?&gt;&gt;();</span><br></pre></td></tr></table></figure></p>
+<p>mybatis 中 javaType 与 jdbcType 是 多对多 的关系，对于 <code>String</code> 来说，可以映射的 jdbcType 有 <code>CHAR</code> <code>VARCHAR</code> 等等， 特别的，jdbcType 也可以指定为 null，用于为 javaType 对应的 jdbcType 未被用户定义的情况，如下是 <code>String</code> 对应的注册关系<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">register(String.class, JdbcType.CHAR, new StringTypeHandler());</span><br><span class="line">register(String.class, JdbcType.CLOB, new ClobTypeHandler());</span><br><span class="line">register(String.class, JdbcType.VARCHAR, new StringTypeHandler());</span><br><span class="line">register(String.class, JdbcType.LONGVARCHAR, new ClobTypeHandler());</span><br><span class="line">register(String.class, JdbcType.NVARCHAR, new NStringTypeHandler());</span><br><span class="line">register(String.class, JdbcType.NCHAR, new NStringTypeHandler());</span><br><span class="line">register(String.class, JdbcType.NCLOB, new NClobTypeHandler());</span><br></pre></td></tr></table></figure></p>
+<p><code>TYPE_HANDLER_MAP</code> 维护了这样的多对多的关系，而 <code>ALL_TYPE_HANDLERS_MAP</code> 则是简单粗暴的将 handler 的 class 与 handler 本身对应起来，所以对于 <code>ALL_TYPE_HANDLERS_MAP</code> 来说，接收泛型的 typehandler 在注册的时候存在覆盖的情况。</p>
+<p>当使用 springboot 的自动注入时，spring 在构建 SqlSession 时通过 SqlSessionFactoryBean 处理 mybatis 的属性并注册 typehandler<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">SqlSessionFactoryBean#buildSqlSessionFactory</span><br><span class="line">    ...</span><br><span class="line">    if (hasLength(this.typeHandlersPackage)) &#123;</span><br><span class="line">      String[] typeHandlersPackageArray = tokenizeToStringArray(this.typeHandlersPackage,</span><br><span class="line">          ConfigurableApplicationContext.CONFIG_LOCATION_DELIMITERS);</span><br><span class="line">      for (String packageToScan : typeHandlersPackageArray) &#123;</span><br><span class="line">        // 注册 handler</span><br><span class="line">        configuration.getTypeHandlerRegistry().register(packageToScan);</span><br><span class="line">        if (LOGGER.isDebugEnabled()) &#123;</span><br><span class="line">          LOGGER.debug(&quot;Scanned package: &apos;&quot; + packageToScan + &quot;&apos; for type handlers&quot;);</span><br><span class="line">        &#125;</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br></pre></td></tr></table></figure></p>
+<p>调用了 TypeHandlerRegistry 的 register 如下<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br></pre></td><td class="code"><pre><span class="line">public void register(Class&lt;?&gt; typeHandlerClass) &#123;</span><br><span class="line">  boolean mappedTypeFound = false;</span><br><span class="line">  MappedTypes mappedTypes = typeHandlerClass.getAnnotation(MappedTypes.class);</span><br><span class="line">  if (mappedTypes != null) &#123;</span><br><span class="line">    for (Class&lt;?&gt; javaTypeClass : mappedTypes.value()) &#123;</span><br><span class="line">      // 对于注解了 MappedTypes 的，将 MappedTypes 的值作为 key 存入 TYPE_HANDLER_MAP 中</span><br><span class="line">      register(javaTypeClass, typeHandlerClass);</span><br><span class="line">      mappedTypeFound = true;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">  if (!mappedTypeFound) &#123;</span><br><span class="line">    register(getInstance(null, typeHandlerClass));</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">// 对于泛型的 typehandler，初始化一个其泛型对应的 typehandler</span><br><span class="line">public &lt;T&gt; TypeHandler&lt;T&gt; getInstance(Class&lt;?&gt; javaTypeClass, Class&lt;?&gt; typeHandlerClass) &#123;</span><br><span class="line">  if (javaTypeClass != null) &#123;</span><br><span class="line">    try &#123;</span><br><span class="line">      Constructor&lt;?&gt; c = typeHandlerClass.getConstructor(Class.class);</span><br><span class="line">      return (TypeHandler&lt;T&gt;) c.newInstance(javaTypeClass);</span><br><span class="line">    &#125; catch (NoSuchMethodException ignored) &#123;</span><br><span class="line">      // ignored</span><br><span class="line">    &#125; catch (Exception e) &#123;</span><br><span class="line">      throw new TypeException(&quot;Failed invoking constructor for handler &quot; + typeHandlerClass, e);</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">  try &#123;</span><br><span class="line">    Constructor&lt;?&gt; c = typeHandlerClass.getConstructor();</span><br><span class="line">    return (TypeHandler&lt;T&gt;) c.newInstance();</span><br><span class="line">  &#125; catch (Exception e) &#123;</span><br><span class="line">    throw new TypeException(&quot;Unable to find a usable constructor for &quot; + typeHandlerClass, e);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">// 如果没有 MappedTypes，则从 typeReference 中推测其类型</span><br><span class="line">public &lt;T&gt; void register(TypeHandler&lt;T&gt; typeHandler) &#123;</span><br><span class="line">  boolean mappedTypeFound = false;</span><br><span class="line">  MappedTypes mappedTypes = typeHandler.getClass().getAnnotation(MappedTypes.class);</span><br><span class="line">  if (mappedTypes != null) &#123;</span><br><span class="line">    for (Class&lt;?&gt; handledType : mappedTypes.value()) &#123;</span><br><span class="line">      register(handledType, typeHandler);</span><br><span class="line">      mappedTypeFound = true;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">  // @since 3.1.0 - try to auto-discover the mapped type</span><br><span class="line">  if (!mappedTypeFound &amp;&amp; typeHandler instanceof TypeReference) &#123;</span><br><span class="line">    try &#123;</span><br><span class="line">      TypeReference&lt;T&gt; typeReference = (TypeReference&lt;T&gt;) typeHandler;</span><br><span class="line">      register(typeReference.getRawType(), typeHandler);</span><br><span class="line">      mappedTypeFound = true;</span><br><span class="line">    &#125; catch (Throwable t) &#123;</span><br><span class="line">      // maybe users define the TypeReference with a different type and are not assignable, so just ignore it</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">  if (!mappedTypeFound) &#123;</span><br><span class="line">    register((Class&lt;T&gt;) null, typeHandler);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">// 如果指定了 jdbcType，则在 TYPE_HANDLER_MAP 中的 value 中的 map 上 key 设置为 jdbcType，否则 key 设置为 null</span><br><span class="line">private &lt;T&gt; void register(Type javaType, TypeHandler&lt;? extends T&gt; typeHandler) &#123;</span><br><span class="line">  MappedJdbcTypes mappedJdbcTypes = typeHandler.getClass().getAnnotation(MappedJdbcTypes.class);</span><br><span class="line">  if (mappedJdbcTypes != null) &#123;</span><br><span class="line">    for (JdbcType handledJdbcType : mappedJdbcTypes.value()) &#123;</span><br><span class="line">      register(javaType, handledJdbcType, typeHandler);</span><br><span class="line">    &#125;</span><br><span class="line">    if (mappedJdbcTypes.includeNullJdbcType()) &#123;</span><br><span class="line">      register(javaType, null, typeHandler);</span><br><span class="line">    &#125;</span><br><span class="line">  &#125; else &#123;</span><br><span class="line">    register(javaType, null, typeHandler);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">// 最终将 javaType，jdbcType，typehandler 写入 TYPE_HANDLER_MAP</span><br><span class="line">// 将 handler.getClass() 与 handler 写入 ALL_TYPE_HANDLERS_MAP</span><br><span class="line">private void register(Type javaType, JdbcType jdbcType, TypeHandler&lt;?&gt; handler) &#123;</span><br><span class="line">  if (javaType != null) &#123;</span><br><span class="line">    Map&lt;JdbcType, TypeHandler&lt;?&gt;&gt; map = TYPE_HANDLER_MAP.get(javaType);</span><br><span class="line">    if (map == null) &#123;</span><br><span class="line">      map = new HashMap&lt;JdbcType, TypeHandler&lt;?&gt;&gt;();</span><br><span class="line">      TYPE_HANDLER_MAP.put(javaType, map);</span><br><span class="line">    &#125;</span><br><span class="line">    map.put(jdbcType, handler);</span><br><span class="line">  &#125;</span><br><span class="line">  ALL_TYPE_HANDLERS_MAP.put(handler.getClass(), handler);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>register 方法跳转很多，总的来说要处理几件事情</p>
+<ol>
+<li>没有指定 MappedTypes 的情况下根据 handler 的 TypeReference 拿到其原始类型作为 javaType，指定了 MappedTypes 的情况下则使用 MappedTypes 作为其 javaType，并构造一个该 MappedType 对应的 handler</li>
+<li>没有指定 jdbcType 的情况下，使用 null 作为 jdbcType，否则使用指定的 jdbcType</li>
+</ol>
+<p>需要注意的点是</p>
+<ol>
+<li>假设我们注册了多个 <code>xx entends BaseTypeHandler&lt;List&lt;T&gt;&gt;</code> ，那么他们 typeRerence 的 rawType 都是 List.class，这个 rawType 也就是 javaType 会作为 <code>TYPE_HANDLER_MAP</code> 中的 key，所以如果这多个 handler 的 jdbcType 也是一样的，那么这多个 handler 会在 <code>TYPE_HANDLER_MAP</code> 中被最后一个注册的覆盖</li>
+<li><code>ALL_TYPE_HANDLERS_MAP</code> 对于泛型的 handler，存在相互覆盖，如上文定义的 JsonTypeHandler, 最后只会留下 <code>{JsonTypeHandler, JsonTypeHandler&lt;DatasourceMeta&gt;}</code> 这个键值对</li>
+</ol>
+<p>基本的注册流程就是这样子，下面我们来看下 Mybatis 是和做数据库值到 JavaBean 的转换的</p>
+<h2 id="3-DB-Value-转换成-JavaBean"><a href="#3-DB-Value-转换成-JavaBean" class="headerlink" title="3 DB Value 转换成 JavaBean"></a>3 DB Value 转换成 JavaBean</h2><p>Mybatis 在启动时就会解析我们定义的 Mapper 类，以上文提到的 mapper 为例<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">@Select(&quot;select * from chart where id = #&#123;chartId&#125;&quot;)</span><br><span class="line">@Results(&#123;</span><br><span class="line">        @Result(column = &quot;type&quot;, property = &quot;type&quot;, typeHandler = ChartTypeHandler.class),</span><br><span class="line">        @Result(column = &quot;graph_styles&quot;, property = &quot;graphStyles&quot;, typeHandler = GraphStylesTypeHandler.class),</span><br><span class="line">        @Result(column = &quot;series_display_name&quot;, property = &quot;seriesDisplayName&quot;, typeHandler = JsonTypeHandler.class),</span><br><span class="line">        @Result(column = &quot;stats&quot;, property = &quot;stats&quot;, typeHandler = StatsTypeHandler.class),</span><br><span class="line">        @Result(column = &quot;headers&quot;, property = &quot;headers&quot;, typeHandler = HeadersTypeHandler.class),</span><br><span class="line">        @Result(column = &quot;datasource_meta&quot;, property = &quot;datasourceMeta&quot;, typeHandler = DataSourceMetaTypeHandler.class),</span><br><span class="line">        @Result(column = &quot;top_cells&quot;, property = &quot;topCells&quot;, typeHandler = TopCellsTypeHandler.class),</span><br><span class="line">&#125;)</span><br><span class="line">Chart getById(@Param(&quot;chartId&quot;) Integer chartId);</span><br></pre></td></tr></table></figure></p>
+<p>我们用注解的方式定义了数据库中的 column 与 javaBean 的 property 如何映射，以及使用什么 handler。Mybatis 会通过 MapperAnnotaionBuilder 类完成对该方法的解析，并设置 column 与 property 的映射关系<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">private void applyResultMap(String resultMapId, Class&lt;?&gt; returnType, Arg[] args, Result[] results,    TypeDiscriminator discriminator) &#123;</span><br><span class="line">  List&lt;ResultMapping&gt; resultMappings = new ArrayList&lt;&gt;();</span><br><span class="line">  applyConstructorArgs(args, returnType, resultMappings);</span><br><span class="line">  applyResults(results, returnType, resultMappings);</span><br><span class="line">  Discriminator disc = applyDiscriminator(resultMapId, returnType, discriminator);</span><br><span class="line">  // TODO add AutoMappingBehaviour</span><br><span class="line">  assistant.addResultMap(resultMapId, returnType, null, disc, resultMappings, null);</span><br><span class="line">  createDiscriminatorResultMaps(resultMapId, returnType, discriminator);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>我们一路跟踪 applyResults(results, returnType, resultMappings) 这个调用链<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">1. MapperAnnotaionBuilder#applyResults</span><br><span class="line">2. MapperBuilderAssistant#buildResultMapping</span><br><span class="line">3. BaseBuilder#resolveTypeHandler</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">  // 如果我们的 result 注解里指定了 handler，则最终在这里根据 class 获取 handler</span><br><span class="line">  protected TypeHandler&lt;?&gt; resolveTypeHandler(Class&lt;?&gt; javaType, Class&lt;? extends TypeHandler&lt;?&gt;&gt; typeHandlerType) &#123;</span><br><span class="line">    if (typeHandlerType == null) &#123;</span><br><span class="line">      return null;</span><br><span class="line">    &#125;</span><br><span class="line">    // javaType ignored for injected handlers see issue #746 for full detail</span><br><span class="line">    TypeHandler&lt;?&gt; handler = typeHandlerRegistry.getMappingTypeHandler(typeHandlerType);</span><br><span class="line">    if (handler == null) &#123;</span><br><span class="line">      // not in registry, create a new one</span><br><span class="line">      handler = typeHandlerRegistry.getInstance(javaType, typeHandlerType);</span><br><span class="line">    &#125;</span><br><span class="line">    return handler;</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure></p>
+<p>而 TypeHandlerRegistry#getMappingTypeHandler 如下<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">public TypeHandler&lt;?&gt; getMappingTypeHandler(Class&lt;? extends TypeHandler&lt;?&gt;&gt; handlerType) &#123;</span><br><span class="line">  return allTypeHandlersMap.get(handlerType);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>可以看到在我们定义了 result 里的 typehandler 时，是直接根据 typehandler 的 class 去 allTypeHandlersMap 拿 handler 的，而我们前文说过，allTypeHandlersMap 中的值是会被覆盖的，这就解释了为什么最后那个 mapper 方法会因为泛型错误而无法进行类型转换了。</p>
+<p>如果我们删除 @Result(column = “series_display_name”, property = “seriesDisplayName”, typeHandler = JsonTypeHandler.class) 中的 typeHandler 则程序能正常运行，正如上文中的 resolveTypeHandler，当我们删除 typeHandler 时，typeHandler 为 null，然后走了 <code>handler = typeHandlerRegistry.getInstance(javaType, typeHandlerType)</code> 这个逻辑，也就是会新建一个正确合适的 handler。</p>
+<p>这是在程序初始化时完成的事情，对于标注了 @Result 的 property 会在 MapperAnnotaionBuilder 中完成 mapping 的映射，其他的属性则是在运行过程中完成映射的，我们跟踪一下代码的执行链路</p>
+<ol>
+<li>执行 query</li>
+<li>DefaultResultSetHandler#handleReusltSets</li>
+<li>DefaultResultSetHandler#handleResultSet</li>
+<li>DefaultResultSetHandler#handleRowValues</li>
+<li>DefaultResultSetHandler#getRowValue</li>
+<li>DefaultResultSetHandler#applyAutomaticMappings</li>
+<li>DefaultResultSetHandler#createAutomaticMappings</li>
+</ol>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">DefaultResultSetHandler#createAutomaticMappings</span><br><span class="line"></span><br><span class="line">    if (property != null &amp;&amp; metaObject.hasSetter(property)) &#123;</span><br><span class="line">      if (resultMap.getMappedProperties().contains(property)) &#123;</span><br><span class="line">        continue;</span><br><span class="line">      &#125;</span><br><span class="line">      final Class&lt;?&gt; propertyType = metaObject.getSetterType(property);</span><br><span class="line">      if (typeHandlerRegistry.hasTypeHandler(propertyType, rsw.getJdbcType(columnName))) &#123;</span><br><span class="line">        // 获取 typehandler 的关键代码</span><br><span class="line">        final TypeHandler&lt;?&gt; typeHandler = rsw.getTypeHandler(propertyType, columnName);</span><br><span class="line">        autoMapping.add(new UnMappedColumnAutoMapping(columnName, property, typeHandler, propertyType.isPrimitive()));</span><br><span class="line">      &#125; else &#123;</span><br><span class="line">        configuration.getAutoMappingUnknownColumnBehavior()</span><br><span class="line">            .doAction(mappedStatement, columnName, property, propertyType);</span><br><span class="line">      &#125;</span><br><span class="line">    &#125; else &#123;</span><br><span class="line">      configuration.getAutoMappingUnknownColumnBehavior()</span><br><span class="line">          .doAction(mappedStatement, columnName, (property != null) ? property : propertyName, null);</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<p>ResultSetWrapper 获取 TypeHandler 的关键代码如下<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line">ResultSetWrapper#getTypeHandler</span><br><span class="line">  ...</span><br><span class="line">  JdbcType jdbcType = getJdbcType(columnName);</span><br><span class="line">  handler = typeHandlerRegistry.getTypeHandler(propertyType, jdbcType);</span><br><span class="line">  ...</span><br><span class="line"></span><br><span class="line">TypeHandlerRegistry#getTypeHandler</span><br><span class="line"></span><br><span class="line">  private &lt;T&gt; TypeHandler&lt;T&gt; getTypeHandler(Type type, JdbcType jdbcType) &#123;</span><br><span class="line">    if (ParamMap.class.equals(type)) &#123;</span><br><span class="line">      return null;</span><br><span class="line">    &#125;</span><br><span class="line">    Map&lt;JdbcType, TypeHandler&lt;?&gt;&gt; jdbcHandlerMap = getJdbcHandlerMap(type);</span><br><span class="line">    TypeHandler&lt;?&gt; handler = null;</span><br><span class="line">    if (jdbcHandlerMap != null) &#123;</span><br><span class="line">      handler = jdbcHandlerMap.get(jdbcType);</span><br><span class="line">      if (handler == null) &#123;</span><br><span class="line">        handler = jdbcHandlerMap.get(null);</span><br><span class="line">      &#125;</span><br><span class="line">      if (handler == null) &#123;</span><br><span class="line">        // #591</span><br><span class="line">        handler = pickSoleHandler(jdbcHandlerMap);</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    // type drives generics here</span><br><span class="line">    return (TypeHandler&lt;T&gt;) handler;</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure></p>
+<p>也就是根据 propertyType 从 <code>TYPE_HANDLER_MAP</code> 中拿 jdbcHandlerMap，如果能不能根据 jdbcType 拿到 handler 则用 null 去拿 handler，至此，所有的 handler 的获取逻辑就理完了，总结一下获取 typehandler 分两步：</p>
+<ol>
+<li>如果定义 @Result，则在 Mybatis 初始化的时候就会配置好相应的 typehandler，且是从 <code>ALL_TYPE_HANDLERS_MAP</code> 取 handler，如果取到为空则新建一个 handler</li>
+<li>对于未在 @Result 中定义的 property 是在运行时获取 handler 的，且是从 <code>TYPE_HANDLER_MAP</code> 中获取，取不到的话，这个值最终会被忽略</li>
+</ol>
+
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+      
+    
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/源码/" rel="tag"># 源码</a>
+          
+            <a href="/tags/mybaits/" rel="tag"># mybaits</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2020/使用-springboot-actuator-prometheus-grafana-监控你的应用/" rel="next" title="使用 springboot actuator & prometheus & grafana 监控你的应用">
+                <i class="fa fa-chevron-left"></i> 使用 springboot actuator & prometheus & grafana 监控你的应用
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+  </div>
+
+
+          </div>
+          
+
+  
+    <div class="comments" id="comments">
+      <div id="disqus_thread">
+        <noscript>Please enable JavaScript to view the comments powered by Disqus.</noscript>
+      </div>
+    </div>
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image"
+                src="/uploads/avatar.jpg"
+                alt="Akisaya"/>
+            
+              <p class="site-author-name" itemprop="name">Akisaya</p>
+              <div class="site-description motion-element" itemprop="description">Take A Leap of Faith</div>
+          </div>
+
+          
+            <nav class="site-state motion-element">
+              
+                <div class="site-state-item site-state-posts">
+                
+                  <a href="/archives/">
+                
+                    <span class="site-state-item-count">12</span>
+                    <span class="site-state-item-name">posts</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-categories">
+                  
+                    
+                      <a href="/categories/">
+                    
+                  
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">5</span>
+                    <span class="site-state-item-name">categories</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-tags">
+                  
+                    
+                      <a href="/tags/">
+                    
+                  
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">19</span>
+                    <span class="site-state-item-name">tags</span>
+                  </a>
+                </div>
+              
+            </nav>
+          
+
+          
+
+          
+
+          
+            <div class="links-of-author motion-element">
+              
+                <span class="links-of-author-item">
+                  
+                  
+                    
+                  
+                  
+                    
+                  
+                  <a href="https://github.com/akisaya" title="GitHub &rarr; https://github.com/akisaya" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+                </span>
+              
+                <span class="links-of-author-item">
+                  
+                  
+                    
+                  
+                  
+                    
+                  
+                  <a href="mailto:akisaya@foxmail.com" title="E-Mail &rarr; mailto:akisaya@foxmail.com" rel="noopener" target="_blank"><i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                </span>
+              
+            </div>
+          
+
+          
+
+          
+          
+
+          
+            
+          
+          
+
+        </div>
+      </div>
+
+      
+      <!--noindex-->
+        <div class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+            
+            
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-起因"><span class="nav-number">1.</span> <span class="nav-text">1 起因</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-Mybatis-TypeHandler-的注册"><span class="nav-number">2.</span> <span class="nav-text">2 Mybatis TypeHandler 的注册</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-DB-Value-转换成-JavaBean"><span class="nav-number">3.</span> <span class="nav-text">3 DB Value 转换成 JavaBean</span></a></li></ol></div>
+            
+
+          </div>
+        </div>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+  
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2020</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Akisaya</span>
+
+  
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> v3.7.1</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme – <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> v7.1.1</div>
+
+
+
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  
+    <span class="post-meta-item-icon">
+      <i class="fa fa-user"></i>
+    </span>
+    <span class="site-uv" title="Total Visitors">
+      <span class="busuanzi-value" id="busuanzi_value_site_uv"></span>
+    </span>
+  
+
+  
+    <span class="post-meta-divider">|</span>
+  
+
+  
+    <span class="post-meta-item-icon">
+      <i class="fa fa-eye"></i>
+    </span>
+    <span class="site-pv" title="Total Views">
+      <span class="busuanzi-value" id="busuanzi_value_site_pv"></span>
+    </span>
+  
+</div>
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+    
+
+    
+  </div>
+
+  
+
+<script>
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+
+  
+
+
+  <script src="/js/utils.js?v=7.1.1"></script>
+
+  <script src="/js/motion.js?v=7.1.1"></script>
+
+
+
+  
+  
+
+
+  <script src="/js/affix.js?v=7.1.1"></script>
+
+  <script src="/js/schemes/pisces.js?v=7.1.1"></script>
+
+
+
+  
+  <script src="/js/scrollspy.js?v=7.1.1"></script>
+<script src="/js/post-details.js?v=7.1.1"></script>
+
+
+
+  
+
+
+  <script src="/js/next-boot.js?v=7.1.1"></script>
+
+
+  
+
+  
+
+  
+
+  
+  
+  <script id="dsq-count-scr" src="https://akisaya.disqus.com/count.js" async></script>
+
+
+<script>
+  var disqus_config = function() {
+    this.page.url = "https://akisaya.github.io/2020/聊聊-Mybatis-的-TypeHandler/";
+    this.page.identifier = "2020/聊聊-Mybatis-的-TypeHandler/";
+    this.page.title = '聊聊 Mybatis 的 TypeHandler';
+    };
+  function loadComments() {
+    var d = document, s = d.createElement('script');
+    s.src = 'https://akisaya.disqus.com/embed.js';
+    s.setAttribute('data-timestamp', '' + +new Date());
+    (d.head || d.body).appendChild(s);
+  }
+  
+    loadComments();
+  
+</script>
+
+
+
+
+
+  
+
+
+  
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+  <script>
+    (function(){
+      var bp = document.createElement('script');
+      var curProtocol = window.location.protocol.split(':')[0];
+      bp.src = (curProtocol === 'https') ? 'https://zz.bdstatic.com/linksubmit/push.js' : 'http://push.zhanzhang.baidu.com/push.js';
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(bp, s);
+    })();
+  </script>
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+<script>
+  $('.highlight').not('.gist .highlight').each(function(i, e) {
+    var $wrap = $('<div>').addClass('highlight-wrap');
+    $(e).after($wrap);
+    $wrap.append($('<button>').addClass('copy-btn').append('Copy').on('click', function(e) {
+      var code = $(this).parent().find('.code').find('.line').map(function(i, e) {
+        return $(e).text();
+      }).toArray().join('\n');
+      var ta = document.createElement('textarea');
+      var yPosition = window.pageYOffset || document.documentElement.scrollTop;
+      ta.style.top = yPosition + 'px'; // Prevent page scroll
+      ta.style.position = 'absolute';
+      ta.style.opacity = '0';
+      ta.readOnly = true;
+      ta.value = code;
+      document.body.appendChild(ta);
+      ta.select();
+      ta.setSelectionRange(0, code.length);
+      ta.readOnly = false;
+      var result = document.execCommand('copy');
+      
+        if (result) $(this).text('Copied');
+        else $(this).text('Copy failed');
+      
+      ta.blur(); // For iOS
+      $(this).blur();
+    })).on('mouseleave', function(e) {
+      var $b = $(this).find('.copy-btn');
+      setTimeout(function() {
+        $b.text('Copy');
+      }, 300);
+    }).append(e);
+  })
+</script>
+
+
+  
+
+  
+
+</body>
+</html>
