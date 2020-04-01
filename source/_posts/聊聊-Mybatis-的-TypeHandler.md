@@ -6,9 +6,9 @@ tags:
     - mybaits
     - 源码
 ---
-Mybatis 的 TypeHandler 是用来将 JavaBean 的属性与数据库中的字段值互相转换的，如果我们的 JavaBean 的属性是简单的属性如 String, Integer, Enum 等，我们一般不用关心 Mybatis 的 TypeHandler，但是如果我们需要将 JavaBean 的复杂对象作为一个字段值存储在数据表中，则需要自定义 TypeHandler 来处理值的映射，比较常见的处理是将复杂对象转换成一个 Json 字符串存储在数据库中，因此需要自定义 JsonTypeHandler，并且我们希望这个 JsonTypeHandler 能够处理范型。
+Mybatis 的 TypeHandler 是用来将 JavaBean 的属性与数据库中的字段值互相转换的，如果我们的 JavaBean 的属性是简单的属性如 String, Integer, Enum 等，我们一般不用关心 Mybatis 的 TypeHandler，但是如果我们需要将 JavaBean 的复杂对象作为一个字段值存储在数据表中，则需要自定义 TypeHandler 来处理值的映射，比较常见的处理是将复杂对象转换成一个 Json 字符串存储在数据库中，因此需要自定义 JsonTypeHandler，并且我们希望这个 JsonTypeHandler 能够处理泛型。
 
-但是最近写一个代码的时候发现 Mybatis 对于 JavaBean 的一个 Map 属性去获取对应的 TypeHandler 时拿错了范型对应的类型，促使我看了看 Mybatis 到底是如何加载 TypeHandler，如果获取 TypeHandler，如果获取的
+但是最近写一个代码的时候发现 Mybatis 对于 JavaBean 的一个 Map 属性去获取对应的 TypeHandler 时拿错了泛型对应的类型，促使我看了看 Mybatis 到底是如何加载 TypeHandler，如果获取 TypeHandler，如果获取的
 <!-- more -->
 ## 1 起因
 在一个 springboot 项目里，在 application.properteis 文件中配置了 typehandler 的 package
@@ -63,7 +63,7 @@ public class JsonTypeHandler<T> extends BaseTypeHandler<T> {
 ```
 然后调用 getById 的方法时报了如下的错误
 ![error](error1.png)
-再 debug 一下发现是 mybatis 在设置 seriesDisplayName 这个属性时虽然使用了 JsonTypeHandler 但是范型却错了
+再 debug 一下发现是 mybatis 在设置 seriesDisplayName 这个属性时虽然使用了 JsonTypeHandler 但是泛型却错了
 ![error](error2.png)
 ## 2 Mybatis TypeHandler 的注册
 TypeHandler 的注册都是通过 TypeHandlerRegistry 这个类完成的，mybatis 已经预先定义了一些常用的 typehandler，需要特别注意的是 `TYPE_HANDLER_MAP` 和 `ALL_TYPE_HANDLERS_MAP`这两个属性
@@ -83,7 +83,7 @@ mybatis 中 javaType 与 jdbcType 是 多对多 的关系，对于 `String` 来�
     register(String.class, JdbcType.NCHAR, new NStringTypeHandler());
     register(String.class, JdbcType.NCLOB, new NClobTypeHandler());
 ```
-`TYPE_HANDLER_MAP` 维护了这样的多对多的关系，而 `ALL_TYPE_HANDLERS_MAP` 则是简单粗暴的将 handler 的 class 与 handler 本身对应起来，所以对于 `ALL_TYPE_HANDLERS_MAP` 来说，接收范型的 typehandler 在注册的时候存在覆盖的情况。
+`TYPE_HANDLER_MAP` 维护了这样的多对多的关系，而 `ALL_TYPE_HANDLERS_MAP` 则是简单粗暴的将 handler 的 class 与 handler 本身对应起来，所以对于 `ALL_TYPE_HANDLERS_MAP` 来说，接收泛型的 typehandler 在注册的时候存在覆盖的情况。
 
 
 当使用 springboot 的自动注入时，spring 在构建 SqlSession 时通过 SqlSessionFactoryBean 处理 mybatis 的属性并注册 typehandler
@@ -270,6 +270,7 @@ Mybatis 在启动时就会解析我们定义的 Mapper 类，以上文提到的 
 5. DefaultResultSetHandler#getRowValue
 6. DefaultResultSetHandler#applyAutomaticMappings
 7. DefaultResultSetHandler#createAutomaticMappings
+
 ```
 DefaultResultSetHandler#createAutomaticMappings
 
