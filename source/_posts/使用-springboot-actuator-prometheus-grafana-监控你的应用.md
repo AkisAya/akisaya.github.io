@@ -22,13 +22,13 @@ tags:
 </dependencies>
 ```
 默认情况下 actuator 提供了很多的监控端点（EndPoint），路径均为 `/actuatro/<endpoint_name>`，比如应用健康信息 health, 访问 `/actuator/health`，可得到如下返回
-```
+```json
 {
   "status": "UP"
 }
 ```
 为了提供能被 prometheus 解析收集的监控信息，我们需要启用 prometheus 端点并添加 prometheus 依赖
-```
+```xml
 # application.properties
 management.endpoints.web.exposure.include=info,health,prometheus
 
@@ -198,8 +198,8 @@ scrape_configs:
 docker run -p 9090:9090 -v path_to_prometheus.yml:/etc/prometheus/prometheus.yml prom/prometheus
 ```
 访问 localhost:9090 即可打开 prometheus 的 web 页面，并且能看到我们之前在程序中自定义的指标
-![prometheus](prometheus.png)
-![metrics](metrics.png)
+![prometheus](./使用-springboot-actuator-prometheus-grafana-监控你的应用/prometheus.png)
+![metrics](./使用-springboot-actuator-prometheus-grafana-监控你的应用/metrics.png)
 
 
 ## grafana
@@ -208,9 +208,9 @@ grafana 可以对接多种数据源并且在一个 dashboard 中添加多个 pan
 docker run -d --name=grafana -p 3000:3000 grafana/grafana
 ```
 然后登录 localhost:3000，默认的用户名和密码是 admin/admin，我们添加刚才的 prometheus 为数据源
-![datasource](datasource.png)
+![datasource](./使用-springboot-actuator-prometheus-grafana-监控你的应用/datasource.png)
 然后添加一个 query
-![query](query.png)
+![query](./使用-springboot-actuator-prometheus-grafana-监控你的应用/query.png)
 
 使用 promQL 我们可以统计更多的指标
 
@@ -228,4 +228,4 @@ http_server_requests_seconds_max{uri="/recommend"}
 histogram_quantile(0.95, http_server_requests_seconds_bucket{uri='/recommend'})
 ```
 
-![whole](whole.png)
+![whole](./使用-springboot-actuator-prometheus-grafana-监控你的应用/whole.png)

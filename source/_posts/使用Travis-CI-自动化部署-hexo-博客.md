@@ -11,7 +11,7 @@ tags: hexo
 CI 即持续集成（Continuous Integration），CI 主要是针对开发中的频繁迭代的代码更新，做自动化的构建和测试工作，及时发现代码中的bug，[Travis CI](https://travis-ci.org/) 就是提供这种持续集成能力的服务。
 
 Travis CI 跟 Github 是绑定在一起的，使用 github 账号登录 Travis CI 后能看到 repos，勾选相应的 repo 后，它能够自动检测 其中某个分支上的 commit，然后拉取仓库中的代码, 基于 `.travis.yml` 中的配置运行定制化的命令。因为我们的 hexo 博客就是在根目录下运行 `hexo g -d`，然后将编译完成的静态文件 push 到 github master 分支，所以我们自然可以通过将 hexo 博客的源码保存在 github 分支上，让 Travis CI 监测这个分支，每当有 commit 的时候，就自动拉取该分支然后编译
-![](./travis_dashboard.png)
+![](./使用Travis-CI-自动化部署-hexo-博客/travis_dashboard.png)
 
 ## 自动化部署
 Travis CI 官网本身提供了一个部署文件到 github pages 的[最小化配置](https://docs.travis-ci.com/user/deployment/pages/)
@@ -27,9 +27,9 @@ deploy:
 我们只有基于这个配置添加 hexo 相关的必要步骤就行
 
 `github-token` 的作用是为了让我们有权限将编译后的静态文件有权限推回 github，我们需要在 github 的 [personal access token](https://github.com/settings/tokens) 里设置，该 token 权限应该尽量小，对于我们自动自动化部署博客这个场景来说，只需要勾选 public_repo 就行了。
-![](./repo_token.png)
+![](./使用Travis-CI-自动化部署-hexo-博客/repo_token.png)
 复制后生成的 token，在设置面板里添加环境变量
-![](./env.png)
+![](./使用Travis-CI-自动化部署-hexo-博客/env.png)
 
 启用 Travis CI 这一部我们就做好了，剩下就是配置好 `.travis.yml`
 ```

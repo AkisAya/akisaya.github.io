@@ -12,14 +12,14 @@ Kubernetes（简称 K8S）自发布以来，已经成为容器化编排的最佳
 先简单介绍几个概念
 <!-- more -->
 - Pod: k8s 最核心的一个概念，是一个或多个 container 的集合。一个 pod 中的 container 共享存储和网络，k8s 支持多种 contianer，但是目前 docker container 是最常见的一种。我们的应用最终都是各个 pod 的形式存在的，pod 也是 k8s 进行调度的最小单位。
-![pod](pod.png)
+![pod](./将你的应用部署在-K8S-上/pod.png)
 - ReplicaSet: 也是 k8s 中的一种资源，管理一个 pod 的多个副本。一般我们部署 pod 为了保证高可用，都会部署多个副本，避免单点故障。如果 replicaSet 管理的某个 pod 挂掉了，它会请求一个新的 pod 出来以满足设定的副本数量。k8s 还有一个 ReplicaionController 也是控制 pod 副本的，但是相比 ReplicaionController，ReplicaSet 对 pod 标签的支持会更好，现在一般就用 ReplicaSet
-![replica](replica.png)
+![replica](./将你的应用部署在-K8S-上/replica.png)
 - Deployment: 是一个更 high-level 的资源，创建一个 Deployment 后会创建一个 ReplicaSet，然后 ReplicaSet 会创建预期数量的 pod。deployment 可以对 ReplicaSet 的版本进行管理，方便回滚。在生产上一般都是创建一个 Deployment
-![depolyment](deployment.png)
+![depolyment](./将你的应用部署在-K8S-上/deployment.png)
 
 我们先准备一个简单的 web 应用 simple-web，并将其打包成 docker 镜像 simple-web:1.0。web 应用后，访问 `/index`，将会输出 web 应用的名字，访问 `/health`，会返回 "OK"
-```
+```shell
 > curl http://ip:8080/index
   web site name is [demo-web]
 > curl http://ip:8080/health
@@ -27,9 +27,9 @@ Kubernetes（简称 K8S）自发布以来，已经成为容器化编排的最佳
 ```
 
 定义一个 `deployment.yml` 如下
-![config](deploy-config.png)
+![config](./将你的应用部署在-K8S-上/deploy-config.png)
 使用 `kubectl create -f deployment.yml`，然后 get 资源可以发现我们创建了一个 deployment，一个 replicaset，一个 pod
-```
+```shell
 ➜  ~ k get deploy
 NAME         READY   UP-TO-DATE   AVAILABLE   AGE
 simple-web   1/1     1            1           2d4h
@@ -41,7 +41,7 @@ NAME                          READY   STATUS    RESTARTS   AGE
 simple-web-6bdf7b4d84-p7jkp   1/1     Running   0          47h
 ```
 我们可以进入到 pod 中执行 curl 命令查看输出，也可以把 curl 命令传递给 kubectl exec
-```
+```shell
 ➜  ~ k exec  simple-web-6bdf7b4d84-p7jkp --  curl -s http://localhost:8080/index
 web site name is [demo-web]
 ```
@@ -59,9 +59,9 @@ web site name is [demo-web]
 ```
 ### 2.2 service
 但是当我们有多个副本的 pod 时，我们不可能一个一个 pod 的代理指定端口，同时 port-forward 也没解决 pod 之间的服务发现。这个时候我们需要 `Service` 来提供路由
-![service](service.png)
+![service](./将你的应用部署在-K8S-上/service.png)
 我们同样使用 ``kubectl create` 创建一个 `Service`
-```
+```yml
 apiVersion: v1
 kind: Service
 metadata:
@@ -75,24 +75,24 @@ spec:
       targetPort: 8080
 ```
 这里 selector 我们需要填写在 deployment 中定义的 pod 的标签
-```
+```shell
 ➜  ~ k get svc
 NAME                  TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)        AGE
 simple-web            ClusterIP   10.96.156.194   <none>        80/TCP         2d4h
 ```
 我们创建了一个叫 `simple-web` 的 service，可以看到 k8s 分配了一个 clusterIP，并将这个 ip 的 80 端口映射到 pod 的 8080 端口
-```
+```shell
 ➜  ~ curl 10.96.156.194/index
 web site name is [demo-web]
 ```
 除了用 ip 访问，我们也可以用 serivce 来访问
-```
+```shell
 ➜  ~ k exec simple-web-6bdf7b4d84-2kzxx -- curl http://simple-web/index
 web site name is [demo-web]
 ```
 ### 2.3 nodeport
 使用 ClusterIP 我们只能在 k8s 集群内访问 pod，如果要从外部访问 pod，则可以定义 NodePort type 的 Service
-```
+```yml
 apiVersion: v1
 kind: Service
 metadata:
@@ -113,7 +113,7 @@ Service 还提供了 LoadBalancer 的 type，方便提供一个 external 的 ip 
 ## 3 Volume
 Volume 提供了一种在 pod 的 container 之间数据交互，container 与宿主机或者其它的存储交互的手段。k8s 的 Volume 有很多类型，下面以 EmptyDir 为例看看 Volume 的使用。
 我们将 web 应用的 log 挂载到 EmptyDir，配置如下
-```
+```yml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -139,7 +139,7 @@ spec:
           emptyDir: {}
 ```
 我们可以在宿主机上找到 emptyDir 的路径，默认是 `/var/lib/kubelet/pods/PODUID/volumes/kubernetes.io~empty-dir/VOLUMENAME`
-```
+```shell
 ➜  ~ k get pods simple-web-6bdf7b4d84-2kzxx -o yaml | grep uid
     uid: 437573bc-7398-4004-89ac-0d268e986c74
   uid: be609483-ed6d-427f-b277-81931cc9eb60
@@ -149,7 +149,7 @@ spec:
 
 ## 4 configmap
 当我们把应用部署到 pod 后，如果希望通过更改配置更改应用的行为，肯定不希望是需要重新打包一个镜像，所以我们需要把配置文件分离出来，configmap 就可以帮助我们完成这个事
-```
+```yml
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -159,7 +159,7 @@ data:
     app.name=web-name-from-config-web
 ```
 然后修改 deployment 如下
-```
+```yml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -201,7 +201,7 @@ k8s 是如何知道一个 pod 无法提供服务了呢？我们需要定义一�
 readiness 类似，通过 readiness 的定义判读 pod 是否已经可以开始提供服务
 ### 5.2 resources
 k8s 提供了限制 container 所能使用的资源量的方法。`resources.requests` 定义了需要多少资源，用于 k8s 将 pod 调度到资源充足的节点，`resources.limits` 则限制了 container 可以使用的资源总量。可参考[Kubernetes Container Resource Requirements](https://medium.com/expedia-group-tech/kubernetes-container-resource-requirements-part-1-memory-a9fbe02c8a5f)
-```
+```yml
 apiVersion: apps/v1
 kind: Deployment
 metadata:

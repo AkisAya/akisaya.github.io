@@ -7,16 +7,16 @@ tags:
     - 源码
 ---
 Mybatis 的 TypeHandler 是用来将 JavaBean 的属性与数据库中的字段值互相转换的，如果我们的 JavaBean 的属性是简单的属性如 String, Integer, Enum 等，我们一般不用关心 Mybatis 的 TypeHandler，但是如果我们需要将 JavaBean 的复杂对象作为一个字段值存储在数据表中，则需要自定义 TypeHandler 来处理值的映射，比较常见的处理是将复杂对象转换成一个 Json 字符串存储在数据库中，因此需要自定义 JsonTypeHandler，并且我们希望这个 JsonTypeHandler 能够处理泛型。
-
-但是最近写一个代码的时候发现 Mybatis 对于 JavaBean 的一个 Map 属性去获取对应的 TypeHandler 时拿错了泛型对应的类型，促使我看了看 Mybatis 到底是如何加载 TypeHandler，如果获取 TypeHandler，如果获取的
 <!-- more -->
+但是最近写一个代码的时候发现 Mybatis 对于 JavaBean 的一个 Map 属性去获取对应的 TypeHandler 时拿错了泛型对应的类型，促使我看了看 Mybatis 到底是如何加载 TypeHandler，如果获取 TypeHandler，如果获取的
+
 ## 1 起因
 在一个 springboot 项目里，在 application.properteis 文件中配置了 typehandler 的 package
 ```
 mybatis.type-handlers-package=me.aki.demo.mybatisdemo.typehandler
 ```
 并定义了如下 JsonTypeHandler
-```
+```java
 @MappedJdbcTypes(JdbcType.VARCHAR)
 @MappedTypes({Map.class, List.class, ChartType.class, GraphType.class, DatasourceMeta.class})
 public class JsonTypeHandler<T> extends BaseTypeHandler<T> {
@@ -48,7 +48,7 @@ public class JsonTypeHandler<T> extends BaseTypeHandler<T> {
 }
 ```
 定义了一个 Mapper 类以及 getById 的方法
-```
+```java
     @Select("select * from chart where id = #{chartId}")
     @Results({
             @Result(column = "type", property = "type", typeHandler = ChartTypeHandler.class),
@@ -62,19 +62,19 @@ public class JsonTypeHandler<T> extends BaseTypeHandler<T> {
     Chart getById(@Param("chartId") Integer chartId);
 ```
 然后调用 getById 的方法时报了如下的错误
-![error](error1.png)
+![error](./聊聊-Mybatis-的-TypeHandler/error1.png)
 再 debug 一下发现是 mybatis 在设置 seriesDisplayName 这个属性时虽然使用了 JsonTypeHandler 但是泛型却错了
-![error](error2.png)
+![error](./聊聊-Mybatis-的-TypeHandler/error2.png)
 ## 2 Mybatis TypeHandler 的注册
 TypeHandler 的注册都是通过 TypeHandlerRegistry 这个类完成的，mybatis 已经预先定义了一些常用的 typehandler，需要特别注意的是 `TYPE_HANDLER_MAP` 和 `ALL_TYPE_HANDLERS_MAP`这两个属性
-```
+```java
   private final Map<JdbcType, TypeHandler<?>> JDBC_TYPE_HANDLER_MAP = new EnumMap<JdbcType, TypeHandler<?>>(JdbcType.class);
   private final Map<Type, Map<JdbcType, TypeHandler<?>>> TYPE_HANDLER_MAP = new ConcurrentHashMap<Type, Map<JdbcType, TypeHandler<?>>>();
   private final TypeHandler<Object> UNKNOWN_TYPE_HANDLER = new UnknownTypeHandler(this);
   private final Map<Class<?>, TypeHandler<?>> ALL_TYPE_HANDLERS_MAP = new HashMap<Class<?>, TypeHandler<?>>();
 ```
 mybatis 中 javaType 与 jdbcType 是 多对多 的关系，对于 `String` 来说，可以映射的 jdbcType 有 `CHAR` `VARCHAR` 等等， 特别的，jdbcType 也可以指定为 null，用于为 javaType 对应的 jdbcType 未被用户定义的情况，如下是 `String` 对应的注册关系
-```
+```java
     register(String.class, JdbcType.CHAR, new StringTypeHandler());
     register(String.class, JdbcType.CLOB, new ClobTypeHandler());
     register(String.class, JdbcType.VARCHAR, new StringTypeHandler());
@@ -87,7 +87,7 @@ mybatis 中 javaType 与 jdbcType 是 多对多 的关系，对于 `String` 来�
 
 
 当使用 springboot 的自动注入时，spring 在构建 SqlSession 时通过 SqlSessionFactoryBean 处理 mybatis 的属性并注册 typehandler
-```
+```java
 SqlSessionFactoryBean#buildSqlSessionFactory
     ...
     if (hasLength(this.typeHandlersPackage)) {
@@ -104,7 +104,7 @@ SqlSessionFactoryBean#buildSqlSessionFactory
     ...
 ```
 调用了 TypeHandlerRegistry 的 register 如下
-```
+```java
   public void register(Class<?> typeHandlerClass) {
     boolean mappedTypeFound = false;
     MappedTypes mappedTypes = typeHandlerClass.getAnnotation(MappedTypes.class);
@@ -206,7 +206,7 @@ register 方法跳转很多，总的来说要处理几件事情
 
 ## 3 DB Value 转换成 JavaBean
 Mybatis 在启动时就会解析我们定义的 Mapper 类，以上文提到的 mapper 为例
-```
+```java
     @Select("select * from chart where id = #{chartId}")
     @Results({
             @Result(column = "type", property = "type", typeHandler = ChartTypeHandler.class),
@@ -220,7 +220,7 @@ Mybatis 在启动时就会解析我们定义的 Mapper 类，以上文提到的 
     Chart getById(@Param("chartId") Integer chartId);
 ```
 我们用注解的方式定义了数据库中的 column 与 javaBean 的 property 如何映射，以及使用什么 handler。Mybatis 会通过 MapperAnnotaionBuilder 类完成对该方法的解析，并设置 column 与 property 的映射关系
-```
+```java
   private void applyResultMap(String resultMapId, Class<?> returnType, Arg[] args, Result[] results,    TypeDiscriminator discriminator) {
     List<ResultMapping> resultMappings = new ArrayList<>();
     applyConstructorArgs(args, returnType, resultMappings);
@@ -232,7 +232,7 @@ Mybatis 在启动时就会解析我们定义的 Mapper 类，以上文提到的 
   }
 ```
 我们一路跟踪 applyResults(results, returnType, resultMappings) 这个调用链
-```
+```java
 1. MapperAnnotaionBuilder#applyResults
 2. MapperBuilderAssistant#buildResultMapping
 3. BaseBuilder#resolveTypeHandler
@@ -253,7 +253,7 @@ Mybatis 在启动时就会解析我们定义的 Mapper 类，以上文提到的 
   }
 ```
 而 TypeHandlerRegistry#getMappingTypeHandler 如下
-```
+```java
   public TypeHandler<?> getMappingTypeHandler(Class<? extends TypeHandler<?>> handlerType) {
     return allTypeHandlersMap.get(handlerType);
   }
@@ -271,7 +271,7 @@ Mybatis 在启动时就会解析我们定义的 Mapper 类，以上文提到的 
 6. DefaultResultSetHandler#applyAutomaticMappings
 7. DefaultResultSetHandler#createAutomaticMappings
 
-```
+```java
 DefaultResultSetHandler#createAutomaticMappings
 
     if (property != null && metaObject.hasSetter(property)) {
@@ -293,7 +293,7 @@ DefaultResultSetHandler#createAutomaticMappings
     }
 ```
 ResultSetWrapper 获取 TypeHandler 的关键代码如下
-```
+```java
 ResultSetWrapper#getTypeHandler
   ...
   JdbcType jdbcType = getJdbcType(columnName);
