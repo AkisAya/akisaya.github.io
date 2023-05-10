@@ -676,21 +676,21 @@ comments:
 # Disqus
 # For more information: https://disqus.com
 disqus:
-  enable: false
-  shortname:
+  enable: true
+  shortname: akisaya
   count: true
 
 # DisqusJS
 # For more information: https://disqusjs.skk.moe
 disqusjs:
-  enable: true
+  enable: false
   # API Endpoint of Disqus API (https://disqus.com/api/docs/).
   # Leave api empty if you are able to connect to Disqus API. Otherwise you need a reverse proxy for it.
   # For example:
   # api: https://disqus.skk.moe/disqus/
   api:
   apikey: # Register new application from https://disqus.com/api/applications/
-  shortname: akisaya # See: https://disqus.com/admin/settings/general/
+  shortname: # See: https://disqus.com/admin/settings/general/
 
 # Changyan
 # For more information: https://changyan.kuaizhan.com
