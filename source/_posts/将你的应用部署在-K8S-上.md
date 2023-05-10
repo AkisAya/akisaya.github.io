@@ -7,10 +7,10 @@ tags:
     - docker
 ---
 Kubernetes（简称 K8S）自发布以来，已经成为容器化编排的最佳工具，本文通过一个简单的案例聊一聊如何将一个容器部署到 k8s 集群上，文中所需的代码和容器均在 [GITHUB](https://github.com/AkisAya/simple-web-for-k8s-demo) 上。如需要搭建一个 k8s 集群，可以通过 [minikube](https://github.com/kubernetes/minikube) 来搭建，也可以使用 docker for desktop 自带的 k8s 集群
-
+<!-- more -->
 ## 1 创建一个最简单的 Deployment
 先简单介绍几个概念
-<!-- more -->
+
 - Pod: k8s 最核心的一个概念，是一个或多个 container 的集合。一个 pod 中的 container 共享存储和网络，k8s 支持多种 contianer，但是目前 docker container 是最常见的一种。我们的应用最终都是各个 pod 的形式存在的，pod 也是 k8s 进行调度的最小单位。
 ![pod](./将你的应用部署在-K8S-上/pod.png)
 - ReplicaSet: 也是 k8s 中的一种资源，管理一个 pod 的多个副本。一般我们部署 pod 为了保证高可用，都会部署多个副本，避免单点故障。如果 replicaSet 管理的某个 pod 挂掉了，它会请求一个新的 pod 出来以满足设定的副本数量。k8s 还有一个 ReplicaionController 也是控制 pod 副本的，但是相比 ReplicaionController，ReplicaSet 对 pod 标签的支持会更好，现在一般就用 ReplicaSet
