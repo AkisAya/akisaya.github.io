@@ -109,7 +109,7 @@ ignore:
 ## Docs: https://hexo.io/docs/deployment.html
 deploy:
   type: git
-  repo: git@github.com:AkisAya/akisaya.github.io.git
+  repo: https://github.com/AkisAya/akisaya.github.io
   branch: master
 
 
