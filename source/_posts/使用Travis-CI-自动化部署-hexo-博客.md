@@ -1,6 +1,7 @@
 ---
 title: 使用 Travis CI 自动化部署 hexo 博客的碎碎念
 date: 2018-09-13 17:04:04
+updated: 2018-09-13 17:04:04
 tags: hexo
 ---
 

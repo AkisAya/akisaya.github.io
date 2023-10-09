@@ -1,6 +1,7 @@
 ---
 title: Blink 适配 Hive 1.x
 date: 2019-05-19 04:21:52
+updated: 2019-05-19 04:21:52
 tags: 
     - Flink
     - Hive

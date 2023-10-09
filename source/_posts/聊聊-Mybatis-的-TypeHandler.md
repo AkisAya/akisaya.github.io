@@ -1,6 +1,7 @@
 ---
 title: 聊聊 Mybatis 的 TypeHandler
 date: 2020-04-01 18:36:35
+updated: 2020-04-01 18:36:35
 categories: java
 tags:
     - mybaits
