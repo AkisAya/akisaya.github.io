@@ -6,9 +6,10 @@ categories: java
 tags:
     - mybaits
     - 源码
+description:
 ---
 Mybatis 的 TypeHandler 是用来将 JavaBean 的属性与数据库中的字段值互相转换的，如果我们的 JavaBean 的属性是简单的属性如 String, Integer, Enum 等，我们一般不用关心 Mybatis 的 TypeHandler，但是如果我们需要将 JavaBean 的复杂对象作为一个字段值存储在数据表中，则需要自定义 TypeHandler 来处理值的映射，比较常见的处理是将复杂对象转换成一个 Json 字符串存储在数据库中，因此需要自定义 JsonTypeHandler，并且我们希望这个 JsonTypeHandler 能够处理泛型。
-<!-- more -->
+
 但是最近写一个代码的时候发现 Mybatis 对于 JavaBean 的一个 Map 属性去获取对应的 TypeHandler 时拿错了泛型对应的类型，促使我看了看 Mybatis 到底是如何加载 TypeHandler，如果获取 TypeHandler，如果获取的
 
 ## 1 起因
