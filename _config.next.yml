@@ -37,13 +37,13 @@ custom_file_path:
 # ---------------------------------------------------------------
 
 # Schemes
-# scheme: Muse
+#scheme: Muse
 scheme: Mist
-# scheme: Pisces
-# scheme: Gemini
+#scheme: Pisces
+#scheme: Gemini
 
 # Dark Mode
-darkmode: false
+darkmode: true
 
 
 # ---------------------------------------------------------------
@@ -119,7 +119,6 @@ menu_settings:
 sidebar:
   # Sidebar Position.
   position: right
-  #position: right
 
   # Manual define the sidebar width. If commented, will be default for:
   # Muse | Mist: 320
@@ -293,8 +292,8 @@ related_posts:
 # Easily browse and edit blog source code online.
 post_edit:
   enable: false
-  url: https://github.com/user-name/repo-name/tree/branch-name/subdirectory-name/ # Link for view source
-  #url: https://github.com/user-name/repo-name/edit/branch-name/subdirectory-name/ # Link for fork & edit
+  url: https://github.com/AkisAya/akisaya.github.io/tree/source/source/ # Link for view source
+  #url: https://github.com/AkisAya/akisaya.github.io/edit/source/source/ # Link for fork & edit
 
 # Show previous post and next post in post footer if exists
 # Available values: left | right | false
@@ -372,6 +371,10 @@ codeblock:
     enable: true
     # Available values: default | flat | mac
     style:
+  # Fold code block
+  fold:
+    enable: true
+    height: 500
 
 back2top:
   enable: true
