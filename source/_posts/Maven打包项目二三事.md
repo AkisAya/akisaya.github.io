@@ -15,7 +15,7 @@ tags:
 ## Maven 项目读取本地 Jar 包
 要在本地项目中引入本地的 Jar 包，网上很多，这里就说说通过 Scope 引入本地包的方法。
 在 pom.xml 中添加下面的 dependency
-```
+```xml
 <dependency>
     <groupId>org.apache.commons</groupId>
     <artifactId>commons-lang3</artifactId>
@@ -30,7 +30,7 @@ tags:
 
 ## 使用 maven-jar-plugin 打包可执行文件
 使用 maven-jar-plugin 打包出来的可执行 jar 是不包含依赖的，所以我们需要将依赖也打包出来，需要使用 dependency-plguin 的配置
-```
+```xml
 <plugin>
     <groupId>org.apache.maven.plugins</groupId>
     <artifactId>maven-jar-plugin</artifactId>
@@ -72,7 +72,7 @@ tags:
 </plugin>	
 ```
 jar-plugin 的 <classpathPrefix> 指定了 classpath 的位置，本案例中即读取可执行包同级目录下的 lib 目录，可执行 jar 的 Manifest 文件如下。dependency-plugin 则将 maven 中的依赖包打包到 <outputDirectory> 指定目录下。
-```
+```shell
 Manifest-Version: 1.0
 Built-By: akis
 Class-Path: lib/guava-26.0-jre.jar lib/jsr305-3.0.2.jar lib/checker-qu
@@ -86,7 +86,7 @@ Main-Class: Test
 
 ### 将依赖包打包到可执行包中
 要将依赖包中打包到可执行包中，有很多插件能做到，这里介绍一下 shade-plugin
-```
+```xml
 <plugin>
 <groupId>org.apache.maven.plugins</groupId>
 <artifactId>maven-shade-plugin</artifactId>
@@ -114,12 +114,12 @@ Main-Class: Test
 该插件能将依赖包导入可行性 jar 包，但是不会引入上文提到的本地引入的依赖包，如果想导入本地依赖的包到可执行 jar，可以使用 [addjars-maven-plugin](https://blog.csdn.net/gaopu12345/article/details/78596830)，有兴趣的读者可以试试
 
 当然使用 java -cp 命令而不是 java -jar 命令来执行主类的话，可以暂时解决外置依赖没打包进依赖包的问题
-```
+```shell
 // java -cp xx.jar:lib/xx.jar packageName.MainClassName
 java -cp testpackage-1.0-SNAPSHOT.jar:lib/commons-lang3-3.8.jar Test
 ```
 最近发现`ManifestResourceTransformer` 除了可以指定 `MainClass`, 其实还可以指定 Manifest 文件里任意的属性，类的名字也隐含了这一点，所以如果利用 `shade-plugin` 的话，可以指定读取外置的依赖，只需要在 `manifestEntries` 中增加 `Class-Path` 属性，如下：
-```
+```xml
 <manifestEntries>
 <Main-Class>${app.main.class}</Main-Class>
 <X-Compile-Source-JDK>${maven.compiler.source}</X-Compile-Source-JDK>
@@ -134,7 +134,7 @@ springboot 项目默认使用了 spring-boot-maven-plugin，默认会打包一�
 那么需要解决的问题是在运行 springboot 打包出来的可执行 jar 的时候能够读到外置的这个 jar 依赖。
 
 首先给出解决方案，配置 spring-boot-maven-plugin，将其 layout 改为 ZIP
-```
+```xml
         <plugins>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
@@ -146,7 +146,7 @@ springboot 项目默认使用了 spring-boot-maven-plugin，默认会打包一�
             </plugin>
 ```
 然后在运行的时候加上 -Dloader.path 这个参数，lib 是 springboot 应用同级目录下的外置依赖目录，我们的外置依赖就放在这个 lib 中
-```
+```shell
 java -Dloader.path=lib ph_pg-0.0.1-SNAPSHOT.jar --spring.profiles.active=prod
 ```
 原因是 springboot 应用启动时时从 org.springframework.boot.loader.JarLauncher 开始启动的，该启动器会忽略外置的 classpath 下的包，因此需要替换成 PropertiesLauncher，配置 layout 为 ZIP 后，springboot 就从 PropertiesLauncher 开始启动，并且使用 loader.path 配置外置的 classpath
@@ -158,7 +158,7 @@ java -Dloader.path=lib ph_pg-0.0.1-SNAPSHOT.jar --spring.profiles.active=prod
 
 ## Maven 打包时排除掉某个文件
 项目里 License 模块，LicenseGenerator 也在模块里，但是打包的时候我们就不能把这个文件打包到依赖包里了，解决方法是，打包时，让这个文件不参与编译就行了，如下，需要注意的是其他的 java 类里也不要 import 这个 LicenseGenerator，不然还是会被编译。我们及时清除不需要的 import 是个好习惯
-```
+```xml
 <plugin>
     <groupId>org.apache.maven.plugins</groupId>
     <artifactId>maven-compiler-plugin</artifactId>
