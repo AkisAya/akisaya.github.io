@@ -26,7 +26,7 @@ tags:
 ```
 在项目中则需要在根目录下新建 lib 文件夹，然后将 jar 包置入
 
-其实如果不想后续打包可能造成的麻烦，最好是 install 到本地仓库然后引入，只不过最近在客户现场做项目的时候，电脑都装不了 maven，我还是用 idea 自带的 maven 的
+其实如果不想后续打包可能造成的麻烦，最好是 install 到本地仓库然后引入
 
 ## 使用 maven-jar-plugin 打包可执行文件
 使用 maven-jar-plugin 打包出来的可执行 jar 是不包含依赖的，所以我们需要将依赖也打包出来，需要使用 dependency-plguin 的配置

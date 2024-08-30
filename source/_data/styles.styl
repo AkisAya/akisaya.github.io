@@ -1,7 +1,30 @@
+:root {
+  --archive-post-content-before-color: #f5f5f5
+}
+
+if (hexo-config('darkmode')) {
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --archive-post-content-before-color: #454545
+    }
+  }
+}
+
 // 调整归档页面 css 样式
 // 隐藏归档页面总文章title
 .posts-collapse .post-content .collection-title {
-  display: none;
+  display: none !important;
+}
+
+.posts-collapse .post-content::before {
+  background: var(--archive-post-content-before-color)
+  margin-left: -0.5px
+  top: 1em
+  width: 1px
+}
+
+.posts-collapse .post-content .collection-year .collection-year-count {
+  background: none
 }
 
 .posts-collapse .post-content .collection-year {
