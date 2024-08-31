@@ -16,6 +16,8 @@ if (hexo-config('darkmode')) {
   display: none !important;
 }
 
+// 竖线是这个 before 元素控制的，改细，同时稍微一动位置与标题栏前的圆心对齐
+// 左侧的竖线原来太抢眼了，这里弱化竖线的视觉效果
 .posts-collapse .post-content::before {
   background: var(--archive-post-content-before-color)
   margin-left: -0.5px
@@ -27,27 +29,31 @@ if (hexo-config('darkmode')) {
   background: none
 }
 
+// 年份缩进，看起来就更有层次感
 .posts-collapse .post-content .collection-year {
   margin: 40px 0 0 0;
 }
 
-
+// 去掉掉年份前的圆点
 .posts-collapse .post-content .collection-year::before {
   display: none;
 }
 
+// 调整归档页面的上的间距
 .posts-collapse .post-content .collection-header {
   margin: 0 0 0 0;
 }
 
+// 文档标题字体整体放大，强调一下视觉效果
 .posts-collapse .post-content .post-header{
   font-size: 1.1em
 }
 
+// 文档标题前的日期字体方法，原来其实是个缩小效果，这么写之后就取消了缩小效果
 .posts-collapse .post-content .post-meta-container {
   font-size: inherit; /* or use initial or unset */
 }
-
+// 减小页面最上方的空隙
 .archive .post-block:first-of-type {
     padding-top: 0;
 }
