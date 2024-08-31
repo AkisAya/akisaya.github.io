@@ -28,7 +28,7 @@ hexo next 这个博客主题挺流行的，但是有一些显示效果不是很�
 }
 
 .posts-expand .post-block:not(:first-of-type) {
-  margin-top: 40px;
+  margin-top: 60px;
 }
 ```
 原来的 post 之间间隔太大了，首页点进去感觉过于稀疏了
@@ -236,7 +236,7 @@ if (hexo-config('darkmode')) {
 }
 
 .posts-expand .post-block:not(:first-of-type) {
-    margin-top: 40px;
+    margin-top: 60px;
 }
 
 
