@@ -35,9 +35,12 @@ hexo next 这个博客主题挺流行的，但是有一些显示效果不是很�
 
 ### 翻页按键边缘与 post 边缘对齐，翻页按键与 post 间距缩小
 调整前，间距大，按钮边缘没对齐
-![调整前](./hexo-next-custom-style/pagination-before.png "调整前，间距大，按钮边缘没对齐")
+<!--![调整前](./hexo-next-custom-style/pagination-before.png "调整前，间距大，按钮边缘没对齐")-->
+<img src="/2024/hexo-next-custom-style/pagination-before.png" width=600 style="float: left; width='50%'"><div style="clear: both;"></div>
 调整后
-![调整后](./hexo-next-custom-style/pagination-after.png "调整后")
+<!--![调整后](./hexo-next-custom-style/pagination-after.png "调整后")-->
+<img src="/2024/hexo-next-custom-style/pagination-after.png" style="float: left; width='50%'"><div style="clear: both;"></div>
+
 ```css
 // 分页  
 .pagination {
@@ -138,7 +141,7 @@ if (hexo-config('darkmode')) {
 ![调整前](./hexo-next-custom-style/hover-before.gif "调整前")
 调整后
 ![调整后](./hexo-next-custom-style/hover-after.gif "调整后")
-可以看出来调整前的选中效果明显更好了
+可以看出来调整后的选中效果明显更好了
 ```css
 // 归档页 title 添加选中的加粗放大效果和动画
 .posts-collapse .post-content .post-title {
