@@ -120,6 +120,12 @@ deploy:
 ## Themes: https://hexo.io/themes/
 theme: next
 
+search:
+  path: search.xml
+  field: post
+  content: true
+  format: html
+
 
 
 
