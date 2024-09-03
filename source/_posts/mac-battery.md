@@ -2,9 +2,8 @@
 title: 使用脚本查看 macOS 电池信息
 date: 2017-12-22 17:51:30
 updated: 2017-12-22 17:51:30
-categories: python
-tags:
-- python
+categories: tech
+tags: [python]
 ---
 
 

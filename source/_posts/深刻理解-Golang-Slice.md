@@ -2,7 +2,7 @@
 title: 深刻理解 Golang Slice
 date: 2022-11-01 20:38:49
 updated: 2024-01-06 21:06:49
-categories: golang
+categories: tech
 tags: golang
 ---
 > Remember, since the slice header is always updated by a call to append, you need to save the returned slice after the call. In fact, the compiler won't let you call append without saving the result.

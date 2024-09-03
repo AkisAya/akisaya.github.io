@@ -2,10 +2,8 @@
 title: ThreadLocal 源码阅读(JDK8)
 date: 2018-11-01 11:41:30
 updated: 2018-11-01 11:41:30
-categories: java
-tags:
-- 源码
-- java基础
+categories: tech
+tags: [java]
 ---
 
 > ThreadLocal 为线程提供了线程本地变量，不同于其他的变量，线程本地变量是通过 get() 和 set() 方法。ThreadLocal 通常是一个私有静态域，与Thread中的某个状态相关联（如：UserID 或者 TransactionId）

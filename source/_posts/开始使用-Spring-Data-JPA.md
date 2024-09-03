@@ -2,9 +2,8 @@
 title: 开始使用 Spring-Data-JPA
 date: 2019-03-15 15:28:24
 updated: 2019-03-15 15:28:24
-tags: 
-- spring
-- database
+categories: tech
+tags: [spring, java]
 ---
 
 
@@ -17,5 +16,4 @@ Spring-Data-Jpa 是一个开箱即用的 ORM 框架，可以让开发人员很�
 </dependency>
 ```
 <!-- more -->
-
-
+<WIP>

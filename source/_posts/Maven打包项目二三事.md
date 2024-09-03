@@ -2,10 +2,8 @@
 title: Maven打包项目二三事
 date: 2018-09-14 16:06:00
 updated: 2018-09-14 16:06:00
-categories: web
-tags:
-- maven
-- springboot
+categories: tech
+tags: [java, maven, springboot]
 ---
 
 ## 使用 Maven 打包项目

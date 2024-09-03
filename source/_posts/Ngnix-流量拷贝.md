@@ -2,7 +2,8 @@
 title: Ngnix 流量拷贝
 date: 2019-11-29 12:01:52
 updated: 2019-11-29 12:01:52
-tags: nginx
+categories: tech
+tags: [nginx]
 ---
 
 在需要真实的流量做旁路测试的时候，我们就可以使用 nginx 来做流量的拷贝

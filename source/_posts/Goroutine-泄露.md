@@ -2,7 +2,7 @@
 title: Goroutine 泄露案例分享
 date: 2022-07-24 10:21:17
 updated: 2024-08-20 01:08:17
-categories: golang
+categories: tech
 tags: [golang]
 ---
 golang 可以很方便的通过 go 关键字开一个协程，但是不正确的使用，也容易造成协程泄漏，下面分享我碰到的案例

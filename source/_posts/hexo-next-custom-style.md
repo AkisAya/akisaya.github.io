@@ -1,9 +1,9 @@
 ---
 title: Hexo Next 修改 CSS 自定义显示效果
-tags: [hexo, css]
 date: 2024-08-31 22:50:45
 updated: 2024-08-31 22:50:45
-categories: 
+categories: tech
+tags: [hexo, css]
 ---
 hexo next 这个博客主题挺流行的，但是有一些显示效果不是很喜欢，一般来说我们可以 git clone 下来 next 这个主题源码再进行修改相应的样式，不过 next 提供了自定义 css 的能力，通过提供一个自定义的 style 文件就可以相应的修改显示效果，参考官方链接的使用方法[Custom Files](https://theme-next.js.org/docs/advanced-settings/custom-files#Hide-Keep-on-posting-in-Archive-Page)，下面分享一下我做的一些修改。
 <!--more-->

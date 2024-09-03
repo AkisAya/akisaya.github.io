@@ -2,7 +2,7 @@
 title: 将你的应用部署在 K8S 上
 date: 2020-01-16 18:36:35
 updated: 2020-01-16 18:36:35
-categories: DevOps
+categories: tech
 tags: [k8s, docker]
 ---
 Kubernetes（简称 K8S）自发布以来，已经成为容器化编排的最佳工具，本文通过一个简单的案例聊一聊如何将一个容器部署到 k8s 集群上，文中所需的代码和容器均在 [GITHUB](https://github.com/AkisAya/simple-web-for-k8s-demo) 上。如需要搭建一个 k8s 集群，可以通过 [minikube](https://github.com/kubernetes/minikube) 来搭建，也可以使用 docker for desktop 自带的 k8s 集群

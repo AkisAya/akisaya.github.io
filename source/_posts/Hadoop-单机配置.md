@@ -2,9 +2,8 @@
 title: Hadoop 单机配置
 date: 2017-12-02 21:51:01
 updated: 2017-12-02 21:51:01
-categories: 大数据
-tags:
- - Hadoop
+categories: tech
+tags: [Hadoop]
 ---
 
 
