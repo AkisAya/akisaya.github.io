@@ -18,6 +18,7 @@ hexo next 这个博客主题挺流行的，但是有一些显示效果不是很�
 然后在 style 文件中添加修改项
 ![image.png](./hexo-next-custom-style/modify-css.png)
 # 我的修改
+**注：本文的修改都是基于 NexT.Mist 主题调整的, 主页 post 调整只在 NexT.Mist 生效，archive 页的调整基本都适用于其他 NexT 主题**
 ## 主页
 ### post 更加紧凑
 调整后
