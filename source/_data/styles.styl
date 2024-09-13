@@ -1,11 +1,15 @@
 :root {
   --archive-post-content-before-color: #f5f5f5
+  --post-body-link-color: #b84848
+  --post-body-link-hover-color: #db5a5a
 }
 
 if (hexo-config('darkmode')) {
   @media (prefers-color-scheme: dark) {
     :root {
       --archive-post-content-before-color: #454545
+      --post-body-link-color: #c5603e
+      --post-body-link-hover-color: #e5724b
     }
   }
 }
@@ -99,4 +103,14 @@ if (hexo-config('darkmode')) {
 // 减小 category 页面最上方的空隙
 .category .post-block:first-of-type {
     padding-top: 0;
+}
+
+// 修改正文中的超链接颜色,但不修改阅读原文的链接颜色
+.post-body a:not(.btn) {
+  color: var(--post-body-link-color) //超链接显示颜色
+  border-bottom-color: var(--post-body-link-color)
+  &:hover {
+    color: var(--post-body-link-hover-color);  //鼠标移动上去后超链接颜色
+    border-bottom-color: var(--post-body-link-hover-color)
+  }
 }

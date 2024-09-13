@@ -1,7 +1,7 @@
 ---
 title: Hexo Next 修改 CSS 自定义显示效果
 date: 2024-08-31 22:50:45
-updated: 2024-08-31 22:50:45
+updated: 2024-09-13 22:50:45
 categories: tech
 tags: [hexo, css]
 ---
@@ -158,16 +158,49 @@ if (hexo-config('darkmode')) {
 ![image.png](./hexo-next-custom-style/hover-debug.png)
 
 
+## 超链接
+原始主题超链接与正文文字颜色相近，仅仅添加一个比较浅的下划线，如果想改超链接的显示颜色，可以添加如下代码
+```css
+:root {
+  --post-body-link-color: #b84848
+  --post-body-link-hover-color: #db5a5a
+}
+
+if (hexo-config('darkmode')) {
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --post-body-link-color: #c5603e
+      --post-body-link-hover-color: #e5724b
+    }
+  }
+}
+
+// 修改正文中的超链接颜色,但不修改阅读原文的链接颜色
+.post-body a:not(.btn) {
+  color: var(--post-body-link-color) //超链接显示颜色
+  border-bottom-color: var(--post-body-link-color)
+  &:hover {
+    color: var(--post-body-link-hover-color);  //鼠标移动上去后超链接颜色
+    border-bottom-color: var(--post-body-link-hover-color)
+  }
+}
+```
+
+
 # 最后附上完整的修改
 ```css
 :root {
   --archive-post-content-before-color: #f5f5f5
+  --post-body-link-color: #b84848
+  --post-body-link-hover-color: #db5a5a
 }
 
 if (hexo-config('darkmode')) {
   @media (prefers-color-scheme: dark) {
     :root {
       --archive-post-content-before-color: #454545
+      --post-body-link-color: #c5603e
+      --post-body-link-hover-color: #e5724b
     }
   }
 }
@@ -249,6 +282,28 @@ if (hexo-config('darkmode')) {
 .pagination .prev, .pagination .next, .pagination .page-number, .pagination .space {
     margin: -1px 10px 0 0;
     padding: 0 10px;
+}
+
+
+
+// 减小 tag 页面最上方的空隙
+.tag .post-block:first-of-type {
+    padding-top: 0;
+}
+
+// 减小 category 页面最上方的空隙
+.category .post-block:first-of-type {
+    padding-top: 0;
+}
+
+// 修改正文中的超链接颜色,但不修改阅读原文的链接颜色
+.post-body a:not(.btn) {
+  color: var(--post-body-link-color) //超链接显示颜色
+  border-bottom-color: var(--post-body-link-color)
+  &:hover {
+    color: var(--post-body-link-hover-color);  //鼠标移动上去后超链接颜色
+    border-bottom-color: var(--post-body-link-hover-color)
+  }
 }
 
 ```

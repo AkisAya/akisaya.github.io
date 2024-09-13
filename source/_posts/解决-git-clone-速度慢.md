@@ -10,7 +10,7 @@ tags: [git]
 
 实在忍不了在本地 git 的龟速了，虽然官网不挂代理也访问无碍，但是本地 git clone 总是只有几 KB，下载稍大的一点的 repo 不仅慢而且失败率飙升
 解决方案自然是使 git clone 走代理了
-```
+```shell
 git config --global http.https://github.com.proxy socks5://127.0.0.1:1086
 git config --global https.https://github.com.proxy socks5://127.0.0.1:1086
 ```
@@ -20,7 +20,7 @@ git config --global https.https://github.com.proxy socks5://127.0.0.1:1086
 
 
 加速 homebrew 同样挂上代理：
-```
+```shell
 export http_proxy=http://127.0.0.1:1087;export https_proxy=http://127.0.0.1:1087;
 brew update && brew upgrade
 ```
