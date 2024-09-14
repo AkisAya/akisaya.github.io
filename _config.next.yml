@@ -714,8 +714,8 @@ gitalk:
   enable: true
   github_id: akisaya # GitHub repo owner
   repo: akisaya.github.io # Repository name to store issues
-  client_id: @%client_id% # GitHub Application Client ID
-  client_secret: @%client_secret% # GitHub Application Client Secret
+  client_id:  # GitHub Application Client ID
+  client_secret:  # GitHub Application Client Secret
   admin_user: akisaya # GitHub repo owner and collaborators, only these guys can initialize gitHub issues
   distraction_free_mode: true # Facebook-like distraction free mode
   # When the official proxy is not available, you can change it to your own proxy address

@@ -49,7 +49,7 @@ jobs:
           git config --global user.email "akikevinsama@gmail.com"
           git config --global user.name "akisaya"
           sed -i'' "/^ *repo/s~github\.com~${GH_TOKEN}@github.com~" _config.yml
-          sed -i'' "s/@%client_id%/${GITALK_CLINET_ID}/g" _config.next.yml
-          sed -i'' "s/@%client_secret%/${GITALK_CLINET_SECRET}/g" _config.next.yml
+          sed -i'' "/^ *client_id:/s/client_id: *$/& ${GITALK_CLINET_ID}/" _config.next.yml
+          sed -i'' "/^ *client_secret:/s/client_secret: *$/& ${GITALK_CLINET_SECRET}/" _config.next.yml
           npm run deploy
           
