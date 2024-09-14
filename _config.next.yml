@@ -711,7 +711,7 @@ livere_uid: # <your_uid>
 # Gitalk
 # For more information: https://gitalk.github.io
 gitalk:
-  enable: true
+  enable: false
   github_id: akisaya # GitHub repo owner
   repo: akisaya.github.io # Repository name to store issues
   client_id:  # GitHub Application Client ID
