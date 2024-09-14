@@ -43,9 +43,13 @@ jobs:
       - name: Deploy
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          GITALK_CLINET_ID: ${{ secrets.GITALK_CLINET_ID }}
+          GITALK_CLINET_SECRET: ${{ secrets.GITALK_CLINET_SECRET }}
         run: |
           git config --global user.email "akikevinsama@gmail.com"
           git config --global user.name "akisaya"
           sed -i'' "/^ *repo/s~github\.com~${GH_TOKEN}@github.com~" _config.yml
+          sed -i'' "s/@%client_id%/${GITALK_CLINET_ID}/g" _config.next.yml
+          sed -i'' "s/@%client_secret%/${GITALK_CLINET_SECRET}/g" _config.next.yml
           npm run deploy
           
