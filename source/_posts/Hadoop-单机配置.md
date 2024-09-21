@@ -2,7 +2,7 @@
 title: Hadoop 单机配置
 date: 2017-12-02 21:51:01
 updated: 2017-12-02 21:51:01
-categories: tech
+categories: notes
 tags: [Hadoop]
 ---
 
