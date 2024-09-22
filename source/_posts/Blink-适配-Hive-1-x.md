@@ -6,7 +6,6 @@ categories: tech
 tags: [flink, hive]
 ---
 
-## 引言
 flink 是新一代的流式计算引擎，在 flink 的数据抽象里，数据都是流（stream），批数据就是有界的流（bounded stream），是流的特例，而 spark 所有的数据都是批数据（batch），spark 处理流数据是把流当作微批（micro batch）来处理，只能达到秒级别的准实时性。在数据处理的抽象程度上，flink 相比 spark 是更加先进的。当前许多公司已经用 flink 取代 spark streaming 和 storm 作为流计算引擎的首选。flink 目前正在高速发展中，接入更多的数据源，但是在 flink 的主分支上对 hive 的数据接入还没有完善的支持，只有一个没人维护的 hcatalog 模块，blink 作为阿里的一个内部分支，已经开始支持 hive 数据源引入，并且阿里将其贡献出来作为 flink 的一个分支，并且 7 月份 blink 的特性就会 merge 到 flink 1.9 的主分支中。
 <!-- more -->
 在 flink 1.9 release 之前，要想使用 flink 接入 hive 数据源只能使用 blink 分支，但是该分支只是阿里开源出来的一个 MVP 产品，在尝试使用时碰到了一些兼容性的问题，本文记录一下遇到的问题以及解决方案
