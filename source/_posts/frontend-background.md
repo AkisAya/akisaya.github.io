@@ -5,7 +5,10 @@ date: 2024-09-13 23:21:01
 updated: 2024-09-13 23:21:01
 categories: tech
 ---
-通过与 chatgpt 对话，了解一些前端项目用的包管理工具，构建工具，框架相关的产生的背景，点击[原始对话链接](https://chatgpt.com/share/d91f9f7f-ae6b-4fe9-a362-023699bf74be)可以直接访问对话上下文，同时回答也同步在此处。
+
+co written with chatgpt
+
+了解一些前端项目用的包管理工具，构建工具，框架相关的产生的背景，点击[原始对话链接](https://chatgpt.com/share/d91f9f7f-ae6b-4fe9-a362-023699bf74be)可以直接访问对话上下文
 <!--more-->
 
 # Q1: 前端编程领域，npm npx yarn pnpm cnpm 有什么联系和区别，这些命令出现的背景是啥  
