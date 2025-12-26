@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: dark)"><meta name="generator" content="Hexo 7.3.0">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+  <meta name="google-site-verification" content="google3ad31b3ddf733a7c.html">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha256-XOqroi11tY4EFQMR9ZYwZWKj5ZXiftSx36RRuC3anlA=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"akisaya.github.io","root":"/","images":"/images","scheme":"Mist","darkmode":true,"version":"8.20.0","exturl":false,"sidebar":{"position":"right","width_expanded":320,"width_dual_column":240,"display":"post","padding":18,"offset":12},"copycode":{"enable":true,"style":null},"fold":{"enable":true,"height":500},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":false,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false}}</script><script src="/js/config.js"></script>
+
+    <meta name="description" content="hexo next 这个博客主题挺流行的，但是有一些显示效果不是很喜欢，一般来说我们可以 git clone 下来 next 这个主题源码再进行修改相应的样式，不过 next 提供了自定义 css 的能力，通过提供一个自定义的 style 文件就可以相应的修改显示效果，参考官方链接的使用方法Custom Files，下面分享一下我做的一些修改。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Hexo Next 修改 CSS 自定义显示效果">
+<meta property="og:url" content="https://akisaya.github.io/2024/hexo-next-custom-style/index.html">
+<meta property="og:site_name" content="Inspiration">
+<meta property="og:description" content="hexo next 这个博客主题挺流行的，但是有一些显示效果不是很喜欢，一般来说我们可以 git clone 下来 next 这个主题源码再进行修改相应的样式，不过 next 提供了自定义 css 的能力，通过提供一个自定义的 style 文件就可以相应的修改显示效果，参考官方链接的使用方法Custom Files，下面分享一下我做的一些修改。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://akisaya.github.io/2024/hexo-next-custom-style/find-target.png">
+<meta property="og:image" content="https://akisaya.github.io/2024/hexo-next-custom-style/css-selector.png">
+<meta property="og:image" content="https://akisaya.github.io/2024/hexo-next-custom-style/modify-css.png">
+<meta property="og:image" content="https://akisaya.github.io/2024/hexo-next-custom-style/post.png">
+<meta property="og:image" content="https://akisaya.github.io/2024/hexo-next-custom-style/pagination-before.png">
+<meta property="og:image" content="https://akisaya.github.io/2024/hexo-next-custom-style/pagination-after.png">
+<meta property="og:image" content="https://akisaya.github.io/2024/hexo-next-custom-style/archive-title.png">
+<meta property="og:image" content="https://akisaya.github.io/2024/hexo-next-custom-style/archive-list-before.png">
+<meta property="og:image" content="https://akisaya.github.io/2024/hexo-next-custom-style/archive-list-after.png">
+<meta property="og:image" content="https://akisaya.github.io/2024/hexo-next-custom-style/darkmode-before.png">
+<meta property="og:image" content="https://akisaya.github.io/2024/hexo-next-custom-style/darkmode-after.png">
+<meta property="og:image" content="https://akisaya.github.io/2024/hexo-next-custom-style/hover-before.gif">
+<meta property="og:image" content="https://akisaya.github.io/2024/hexo-next-custom-style/hover-after.gif">
+<meta property="og:image" content="https://akisaya.github.io/2024/hexo-next-custom-style/hover-debug.png">
+<meta property="article:published_time" content="2024-08-31T14:50:45.000Z">
+<meta property="article:modified_time" content="2024-09-13T14:50:45.000Z">
+<meta property="article:author" content="Akisaya">
+<meta property="article:tag" content="hexo">
+<meta property="article:tag" content="css">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://akisaya.github.io/2024/hexo-next-custom-style/find-target.png">
+
+
+<link rel="canonical" href="https://akisaya.github.io/2024/hexo-next-custom-style/">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://akisaya.github.io/2024/hexo-next-custom-style/","path":"2024/hexo-next-custom-style/","title":"Hexo Next 修改 CSS 自定义显示效果"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>Hexo Next 修改 CSS 自定义显示效果 | Inspiration</title>
+  
+
+
+
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">Inspiration</p>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li><li class="menu-item menu-item-tools"><a href="/tools/" rel="section"><i class="fa fa-wrench fa-fw"></i>工具箱</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup"><div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off" maxlength="80"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close" role="button">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="search-result-container no-result">
+  <div class="search-result-icon">
+    <i class="fa fa-spinner fa-pulse fa-5x"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%A6%82%E4%BD%95%E4%BF%AE%E6%94%B9"><span class="nav-number">1.</span> <span class="nav-text">如何修改</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%9A%E4%BD%8DCSS"><span class="nav-number">1.1.</span> <span class="nav-text">定位CSS</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#next-style-%E9%85%8D%E7%BD%AE"><span class="nav-number">1.2.</span> <span class="nav-text">next style 配置</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%88%91%E7%9A%84%E4%BF%AE%E6%94%B9"><span class="nav-number">2.</span> <span class="nav-text">我的修改</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%BB%E9%A1%B5"><span class="nav-number">2.1.</span> <span class="nav-text">主页</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#post-%E6%9B%B4%E5%8A%A0%E7%B4%A7%E5%87%91"><span class="nav-number">2.1.1.</span> <span class="nav-text">post 更加紧凑</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%BF%BB%E9%A1%B5%E6%8C%89%E9%94%AE%E8%BE%B9%E7%BC%98%E4%B8%8E-post-%E8%BE%B9%E7%BC%98%E5%AF%B9%E9%BD%90%EF%BC%8C%E7%BF%BB%E9%A1%B5%E6%8C%89%E9%94%AE%E4%B8%8E-post-%E9%97%B4%E8%B7%9D%E7%BC%A9%E5%B0%8F"><span class="nav-number">2.1.2.</span> <span class="nav-text">翻页按键边缘与 post 边缘对齐，翻页按键与 post 间距缩小</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%BD%92%E6%A1%A3%E9%A1%B5%E9%9D%A2"><span class="nav-number">2.2.</span> <span class="nav-text">归档页面</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8E%BB%E6%8E%89%E5%BD%92%E6%A1%A3%E9%A1%B5%E7%9A%84%E6%96%87%E6%A1%A3%E7%BB%9F%E8%AE%A1"><span class="nav-number">2.2.1.</span> <span class="nav-text">去掉归档页的文档统计</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%B9%B4%E4%BB%BD%E7%BC%A9%E8%BF%9B%EF%BC%8C%E6%A0%87%E9%A2%98%E9%97%B4%E8%B7%9D%E8%B0%83%E6%95%B4%EF%BC%8C%E6%A0%87%E9%A2%98%E5%AD%97%E4%BD%93%E6%94%BE%E5%A4%A7%EF%BC%8C%E7%AB%96%E7%BA%BF%E6%94%B9%E7%BB%86%E7%AD%89"><span class="nav-number">2.2.2.</span> <span class="nav-text">年份缩进，标题间距调整，标题字体放大，竖线改细等</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%AB%96%E7%BA%BF%E7%9A%84%E5%A4%9C%E9%97%B4%E6%A8%A1%E5%BC%8F"><span class="nav-number">2.2.3.</span> <span class="nav-text">竖线的夜间模式</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%96%87%E6%A1%A3%E6%A0%87%E9%A2%98%E6%B7%BB%E5%8A%A0%E5%8A%A8%E7%94%BB"><span class="nav-number">2.2.4.</span> <span class="nav-text">文档标题添加动画</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%B6%85%E9%93%BE%E6%8E%A5"><span class="nav-number">2.3.</span> <span class="nav-text">超链接</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%9C%80%E5%90%8E%E9%99%84%E4%B8%8A%E5%AE%8C%E6%95%B4%E7%9A%84%E4%BF%AE%E6%94%B9"><span class="nav-number">3.</span> <span class="nav-text">最后附上完整的修改</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Akisaya"
+      src="/uploads/avatar.jpg">
+  <p class="site-author-name" itemprop="name">Akisaya</p>
+  <div class="site-description" itemprop="description">Take A Leap of Faith</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">15</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">2</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">21</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/akisaya" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;akisaya" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:akisaya@foxmail.com" title="E-Mail → mailto:akisaya@foxmail.com" rel="noopener me" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://akisaya.github.io/2024/hexo-next-custom-style/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/uploads/avatar.jpg">
+      <meta itemprop="name" content="Akisaya">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Inspiration">
+      <meta itemprop="description" content="Take A Leap of Faith">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="Hexo Next 修改 CSS 自定义显示效果 | Inspiration">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Hexo Next 修改 CSS 自定义显示效果
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2024-08-31 22:50:45" itemprop="dateCreated datePublished" datetime="2024-08-31T22:50:45+08:00">2024-08-31</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2024-09-13 22:50:45" itemprop="dateModified" datetime="2024-09-13T22:50:45+08:00">2024-09-13</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/notes/" itemprop="url" rel="index"><span itemprop="name">notes</span></a>
+        </span>
+    </span>
+
+  
+    <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv">
+      <span class="post-meta-item-icon">
+        <i class="far fa-eye"></i>
+      </span>
+      <span class="post-meta-item-text">阅读次数：</span>
+      <span id="busuanzi_value_page_pv"></span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><p>hexo next 这个博客主题挺流行的，但是有一些显示效果不是很喜欢，一般来说我们可以 git clone 下来 next 这个主题源码再进行修改相应的样式，不过 next 提供了自定义 css 的能力，通过提供一个自定义的 style 文件就可以相应的修改显示效果，参考官方链接的使用方法<a target="_blank" rel="noopener" href="https://theme-next.js.org/docs/advanced-settings/custom-files#Hide-Keep-on-posting-in-Archive-Page">Custom Files</a>，下面分享一下我做的一些修改。</p>
+<span id="more"></span>
+<h1 id="如何修改"><a href="#如何修改" class="headerlink" title="如何修改"></a>如何修改</h1><h2 id="定位CSS"><a href="#定位CSS" class="headerlink" title="定位CSS"></a>定位CSS</h2><p>这个其实通过浏览器的开发者工具页面可以找到，我们找到相应元素的 css 类，然后可以自行调整其中的属性值达到我们<br><img src="/2024/hexo-next-custom-style/find-target.png" alt="image.png"></p>
+<h2 id="next-style-配置"><a href="#next-style-配置" class="headerlink" title="next style 配置"></a>next style 配置</h2><p>参考 <a target="_blank" rel="noopener" href="https://theme-next.js.org/docs/advanced-settings/custom-files#Hide-Keep-on-posting-in-Archive-Page">Custom Files</a>，在 <code>source/_data/styles.styl</code>中添加 css<br>添加类选择器的时候最好按照浏览器显示的类选择器一起 copy 下来，如下所示<br><img src="/2024/hexo-next-custom-style/css-selector.png" alt="image.png"><br>然后在 style 文件中添加修改项<br><img src="/2024/hexo-next-custom-style/modify-css.png" alt="image.png"></p>
+<h1 id="我的修改"><a href="#我的修改" class="headerlink" title="我的修改"></a>我的修改</h1><p><strong>注：本文的修改都是基于 NexT.Mist 主题调整的, 主页 post 调整只在 NexT.Mist 生效，archive 页的调整基本都适用于其他 NexT 主题</strong></p>
+<h2 id="主页"><a href="#主页" class="headerlink" title="主页"></a>主页</h2><h3 id="post-更加紧凑"><a href="#post-更加紧凑" class="headerlink" title="post 更加紧凑"></a>post 更加紧凑</h3><p>调整后<br><img src="/2024/hexo-next-custom-style/post.png" alt="调整后" title="调整后"></p>
+<figure class="highlight css"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="selector-class">.posts-expand</span> <span class="selector-class">.post-block</span><span class="selector-pseudo">:first</span>-of-type &#123;</span><br><span class="line">  <span class="attribute">padding-top</span>: <span class="number">40px</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="selector-class">.posts-expand</span> <span class="selector-class">.post-block</span><span class="selector-pseudo">:not</span>(<span class="selector-pseudo">:first</span>-of-type) &#123;</span><br><span class="line">  <span class="attribute">margin-top</span>: <span class="number">60px</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>原来的 post 之间间隔太大了，首页点进去感觉过于稀疏了</p>
+<h3 id="翻页按键边缘与-post-边缘对齐，翻页按键与-post-间距缩小"><a href="#翻页按键边缘与-post-边缘对齐，翻页按键与-post-间距缩小" class="headerlink" title="翻页按键边缘与 post 边缘对齐，翻页按键与 post 间距缩小"></a>翻页按键边缘与 post 边缘对齐，翻页按键与 post 间距缩小</h3><p>调整前，间距大，按钮边缘没对齐</p>
+<!--![调整前](/2024/hexo-next-custom-style/pagination-before.png "调整前，间距大，按钮边缘没对齐")-->
+<p><img src="/2024/hexo-next-custom-style/pagination-before.png" width=600 style="float: left; width='50%'"><div style="clear: both;"></div><br>调整后</p>
+<!--![调整后](/2024/hexo-next-custom-style/pagination-after.png "调整后")-->
+<p><img src="/2024/hexo-next-custom-style/pagination-after.png" style="float: left; width='50%'"><div style="clear: both;"></div></p>
+<figure class="highlight css"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">// 分页  </span><br><span class="line"><span class="selector-class">.pagination</span> &#123;</span><br><span class="line">  <span class="attribute">margin</span>: <span class="number">60px</span> <span class="number">0</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="selector-class">.pagination</span> <span class="selector-class">.prev</span>, <span class="selector-class">.pagination</span> <span class="selector-class">.next</span>, <span class="selector-class">.pagination</span> <span class="selector-class">.page-number</span>, <span class="selector-class">.pagination</span> <span class="selector-class">.space</span> &#123;</span><br><span class="line">    <span class="attribute">margin</span>: -<span class="number">1px</span> <span class="number">10px</span> <span class="number">0</span> <span class="number">0</span>;</span><br><span class="line">    <span class="attribute">padding</span>: <span class="number">0</span> <span class="number">10px</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="归档页面"><a href="#归档页面" class="headerlink" title="归档页面"></a>归档页面</h2><h3 id="去掉归档页的文档统计"><a href="#去掉归档页的文档统计" class="headerlink" title="去掉归档页的文档统计"></a>去掉归档页的文档统计</h3><p><img src="/2024/hexo-next-custom-style/archive-title.png" alt="image.png"></p>
+<figure class="highlight css"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="selector-class">.posts-collapse</span> <span class="selector-class">.post-content</span> <span class="selector-class">.collection-title</span> &#123;</span><br><span class="line">  <span class="attribute">display</span>: none <span class="meta">!important</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="年份缩进，标题间距调整，标题字体放大，竖线改细等"><a href="#年份缩进，标题间距调整，标题字体放大，竖线改细等" class="headerlink" title="年份缩进，标题间距调整，标题字体放大，竖线改细等"></a>年份缩进，标题间距调整，标题字体放大，竖线改细等</h3><p>调整前<br><img src="/2024/hexo-next-custom-style/archive-list-before.png" alt="调整前" title="调整前"><br>调整后<br><img src="/2024/hexo-next-custom-style/archive-list-after.png" alt="调整后" title="调整后"></p>
+<figure class="highlight css"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line">// 竖线是这个 before 元素控制的，改细，同时稍微一动位置与标题栏前的圆心对齐</span><br><span class="line">// 左侧的竖线原来太抢眼了，这里弱化竖线的视觉效果</span><br><span class="line"><span class="selector-class">.posts-collapse</span> <span class="selector-class">.post-content</span><span class="selector-pseudo">::before</span> &#123;</span><br><span class="line">  <span class="attribute">background</span>: <span class="built_in">var</span>(--archive-post-content-before-color)</span><br><span class="line">  margin-left: -<span class="number">0.5px</span></span><br><span class="line">  top: <span class="number">1em</span></span><br><span class="line">  width: <span class="number">1px</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">// 年份缩进，看起来就更有层次感</span><br><span class="line"><span class="selector-class">.posts-collapse</span> <span class="selector-class">.post-content</span> <span class="selector-class">.collection-year</span> &#123;</span><br><span class="line">  <span class="attribute">margin</span>: <span class="number">40px</span> <span class="number">0</span> <span class="number">0</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">// 去掉掉年份前的圆点</span><br><span class="line"><span class="selector-class">.posts-collapse</span> <span class="selector-class">.post-content</span> <span class="selector-class">.collection-year</span><span class="selector-pseudo">::before</span> &#123;</span><br><span class="line">  <span class="attribute">display</span>: none;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">// 调整归档页面的上的间距</span><br><span class="line"><span class="selector-class">.posts-collapse</span> <span class="selector-class">.post-content</span> <span class="selector-class">.collection-header</span> &#123;</span><br><span class="line">  <span class="attribute">margin</span>: <span class="number">0</span> <span class="number">0</span> <span class="number">0</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">// 文档标题字体整体放大，强调一下视觉效果</span><br><span class="line"><span class="selector-class">.posts-collapse</span> <span class="selector-class">.post-content</span> <span class="selector-class">.post-header</span>&#123;</span><br><span class="line">  <span class="attribute">font-size</span>: <span class="number">1.1em</span></span><br><span class="line">&#125;</span><br><span class="line">// 文档标题前的日期字体方法，原来其实是个缩小效果，这么写之后就取消了缩小效果</span><br><span class="line"><span class="selector-class">.posts-collapse</span> <span class="selector-class">.post-content</span> <span class="selector-class">.post-meta-container</span> &#123;</span><br><span class="line">  <span class="attribute">font-size</span>: inherit; <span class="comment">/* or use initial or unset */</span></span><br><span class="line">&#125;</span><br><span class="line">// 减小页面最上方的空隙</span><br><span class="line"><span class="selector-class">.archive</span> <span class="selector-class">.post-block</span><span class="selector-pseudo">:first</span>-of-type &#123;</span><br><span class="line">    <span class="attribute">padding-top</span>: <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="竖线的夜间模式"><a href="#竖线的夜间模式" class="headerlink" title="竖线的夜间模式"></a>竖线的夜间模式</h3><p>调整前<br><img src="/2024/hexo-next-custom-style/darkmode-before.png" alt="调整前" title="调整前"><br>调整后<br><img src="/2024/hexo-next-custom-style/darkmode-after.png" alt="调整后" title="调整后"></p>
+<figure class="highlight css"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="selector-pseudo">:root</span> &#123;</span><br><span class="line">  <span class="attr">--archive-post-content-before-color</span>: <span class="number">#f5f5f5</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">if (hexo-config(&#x27;darkmode&#x27;)) &#123;</span><br><span class="line">  <span class="keyword">@media</span> (<span class="attribute">prefers-color-scheme</span>: dark) &#123;</span><br><span class="line">    <span class="selector-pseudo">:root</span> &#123;</span><br><span class="line">      <span class="attr">--archive-post-content-before-color</span>: <span class="number">#454545</span></span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">// 这里竖线的颜色使用到了 css 的变量，然后在 <span class="selector-pseudo">:root</span> 上面定义了日间和夜间模式使用的颜色值</span><br><span class="line">// 这个定义变量的方式从next代码里趴出来的</span><br><span class="line"><span class="selector-class">.posts-collapse</span> <span class="selector-class">.post-content</span><span class="selector-pseudo">::before</span> &#123;</span><br><span class="line">  <span class="attribute">background</span>: <span class="built_in">var</span>(--archive-post-content-before-color)</span><br><span class="line">  margin-left: -<span class="number">0.5px</span></span><br><span class="line">  top: <span class="number">1em</span></span><br><span class="line">  width: <span class="number">1px</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">// 年份数量统计有背景色，这里取消掉</span><br><span class="line"><span class="selector-class">.posts-collapse</span> <span class="selector-class">.post-content</span> <span class="selector-class">.collection-year</span><span class="selector-pseudo">::before</span> &#123;</span><br><span class="line">  <span class="attribute">display</span>: none;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><a target="_blank" rel="noopener" href="https://github.com/next-theme/hexo-theme-next/blob/master/source/css/_colors.styl">next 定义的 css color 变量</a></p>
+<h3 id="文档标题添加动画"><a href="#文档标题添加动画" class="headerlink" title="文档标题添加动画"></a>文档标题添加动画</h3><p>调整前<br><img src="/2024/hexo-next-custom-style/hover-before.gif" alt="调整前" title="调整前"><br>调整后<br><img src="/2024/hexo-next-custom-style/hover-after.gif" alt="调整后" title="调整后"><br>可以看出来调整后的选中效果明显更好了</p>
+<figure class="highlight css"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">// 归档页 title 添加选中的加粗放大效果和动画</span><br><span class="line"><span class="selector-class">.posts-collapse</span> <span class="selector-class">.post-content</span> <span class="selector-class">.post-title</span> &#123;</span><br><span class="line">  <span class="attribute">transition</span>: font-size <span class="number">0.1s</span> ease, font-weight <span class="number">0.1s</span> ease; <span class="comment">/* 添加过渡动画 */</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="selector-class">.posts-collapse</span> <span class="selector-class">.post-content</span> <span class="selector-class">.post-title</span><span class="selector-pseudo">:hover</span> &#123;</span><br><span class="line">  <span class="attribute">font-weight</span>: bold;</span><br><span class="line">  <span class="attribute">font-size</span>: <span class="number">1.1em</span>; <span class="comment">/* 放大字体大小，1.1em 表示放大 10% */</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>一个小技巧是，在调试的时候可以通过图示的方法显示 hover 后的显示效果，这点击后可以看到加粗<br><img src="/2024/hexo-next-custom-style/hover-debug.png" alt="image.png"></p>
+<h2 id="超链接"><a href="#超链接" class="headerlink" title="超链接"></a>超链接</h2><p>原始主题超链接与正文文字颜色相近，仅仅添加一个比较浅的下划线，如果想改超链接的显示颜色，可以添加如下代码</p>
+<figure class="highlight css"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="selector-pseudo">:root</span> &#123;</span><br><span class="line">  <span class="attr">--post-body-link-color</span>: <span class="number">#b84848</span></span><br><span class="line">  --post-body-link-hover-color: <span class="number">#db5a5a</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">if (hexo-config(&#x27;darkmode&#x27;)) &#123;</span><br><span class="line">  <span class="keyword">@media</span> (<span class="attribute">prefers-color-scheme</span>: dark) &#123;</span><br><span class="line">    <span class="selector-pseudo">:root</span> &#123;</span><br><span class="line">      <span class="attr">--post-body-link-color</span>: <span class="number">#c5603e</span></span><br><span class="line">      --post-body-link-hover-color: <span class="number">#e5724b</span></span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">// 修改正文中的超链接颜色,但不修改阅读原文的链接颜色</span><br><span class="line"><span class="selector-class">.post-body</span> <span class="selector-tag">a</span><span class="selector-pseudo">:not</span>(<span class="selector-class">.btn</span>) &#123;</span><br><span class="line">  <span class="attribute">color</span>: <span class="built_in">var</span>(--post-body-link-color) //超链接显示颜色</span><br><span class="line">  border-bottom-color: <span class="built_in">var</span>(--post-body-link-color)</span><br><span class="line">  &amp;:hover &#123;</span><br><span class="line">    <span class="attribute">color</span>: <span class="built_in">var</span>(--post-body-link-hover-color);  //鼠标移动上去后超链接颜色</span><br><span class="line">    <span class="attribute">border-bottom-color</span>: <span class="built_in">var</span>(--post-body-link-hover-color)</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+<h1 id="最后附上完整的修改"><a href="#最后附上完整的修改" class="headerlink" title="最后附上完整的修改"></a>最后附上完整的修改</h1><figure class="highlight css"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br></pre></td><td class="code"><pre><span class="line"><span class="selector-pseudo">:root</span> &#123;</span><br><span class="line">  <span class="attr">--archive-post-content-before-color</span>: <span class="number">#f5f5f5</span></span><br><span class="line">  --post-body-link-color: <span class="number">#b84848</span></span><br><span class="line">  --post-body-link-hover-color: <span class="number">#db5a5a</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">if (hexo-config(&#x27;darkmode&#x27;)) &#123;</span><br><span class="line">  <span class="keyword">@media</span> (<span class="attribute">prefers-color-scheme</span>: dark) &#123;</span><br><span class="line">    <span class="selector-pseudo">:root</span> &#123;</span><br><span class="line">      <span class="attr">--archive-post-content-before-color</span>: <span class="number">#454545</span></span><br><span class="line">      --post-body-link-color: <span class="number">#c5603e</span></span><br><span class="line">      --post-body-link-hover-color: <span class="number">#e5724b</span></span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">// 调整归档页面 css 样式</span><br><span class="line">// 隐藏归档页面总文章title</span><br><span class="line"><span class="selector-class">.posts-collapse</span> <span class="selector-class">.post-content</span> <span class="selector-class">.collection-title</span> &#123;</span><br><span class="line">  <span class="attribute">display</span>: none <span class="meta">!important</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">// 竖线是这个 before 元素控制的，改细，同时稍微一动位置与标题栏前的圆心对齐</span><br><span class="line">// 左侧的竖线原来太抢眼了，这里弱化竖线的视觉效果</span><br><span class="line"><span class="selector-class">.posts-collapse</span> <span class="selector-class">.post-content</span><span class="selector-pseudo">::before</span> &#123;</span><br><span class="line">  <span class="attribute">background</span>: <span class="built_in">var</span>(--archive-post-content-before-color)</span><br><span class="line">  margin-left: -<span class="number">0.5px</span></span><br><span class="line">  top: <span class="number">1em</span></span><br><span class="line">  width: <span class="number">1px</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="selector-class">.posts-collapse</span> <span class="selector-class">.post-content</span> <span class="selector-class">.collection-year</span> <span class="selector-class">.collection-year-count</span> &#123;</span><br><span class="line">  <span class="attribute">background</span>: none</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">// 年份缩进，看起来就更有层次感</span><br><span class="line"><span class="selector-class">.posts-collapse</span> <span class="selector-class">.post-content</span> <span class="selector-class">.collection-year</span> &#123;</span><br><span class="line">  <span class="attribute">margin</span>: <span class="number">40px</span> <span class="number">0</span> <span class="number">0</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">// 去掉掉年份前的圆点</span><br><span class="line"><span class="selector-class">.posts-collapse</span> <span class="selector-class">.post-content</span> <span class="selector-class">.collection-year</span><span class="selector-pseudo">::before</span> &#123;</span><br><span class="line">  <span class="attribute">display</span>: none;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">// 调整归档页面的上的间距</span><br><span class="line"><span class="selector-class">.posts-collapse</span> <span class="selector-class">.post-content</span> <span class="selector-class">.collection-header</span> &#123;</span><br><span class="line">  <span class="attribute">margin</span>: <span class="number">0</span> <span class="number">0</span> <span class="number">0</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">// 文档标题字体整体放大，强调一下视觉效果</span><br><span class="line"><span class="selector-class">.posts-collapse</span> <span class="selector-class">.post-content</span> <span class="selector-class">.post-header</span>&#123;</span><br><span class="line">  <span class="attribute">font-size</span>: <span class="number">1.1em</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">// 文档标题前的日期字体方法，原来其实是个缩小效果，这么写之后就取消了缩小效果</span><br><span class="line"><span class="selector-class">.posts-collapse</span> <span class="selector-class">.post-content</span> <span class="selector-class">.post-meta-container</span> &#123;</span><br><span class="line">  <span class="attribute">font-size</span>: inherit; <span class="comment">/* or use initial or unset */</span></span><br><span class="line">&#125;</span><br><span class="line">// 减小页面最上方的空隙</span><br><span class="line"><span class="selector-class">.archive</span> <span class="selector-class">.post-block</span><span class="selector-pseudo">:first</span>-of-type &#123;</span><br><span class="line">    <span class="attribute">padding-top</span>: <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">// 归档页 title 添加选中的加粗放大效果和动画</span><br><span class="line"><span class="selector-class">.posts-collapse</span> <span class="selector-class">.post-content</span> <span class="selector-class">.post-title</span> &#123;</span><br><span class="line">  <span class="attribute">transition</span>: font-size <span class="number">0.1s</span> ease, font-weight <span class="number">0.1s</span> ease; <span class="comment">/* 添加过渡动画 */</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="selector-class">.posts-collapse</span> <span class="selector-class">.post-content</span> <span class="selector-class">.post-title</span><span class="selector-pseudo">:hover</span> &#123;</span><br><span class="line">  <span class="attribute">font-weight</span>: bold;</span><br><span class="line">  <span class="attribute">font-size</span>: <span class="number">1.1em</span>; <span class="comment">/* 放大字体大小，1.1em 表示放大 10% */</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">// 首页 post 间距调整</span><br><span class="line"><span class="selector-class">.posts-expand</span> <span class="selector-class">.post-block</span><span class="selector-pseudo">:first</span>-of-type &#123;</span><br><span class="line">    <span class="attribute">padding-top</span>: <span class="number">40px</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="selector-class">.posts-expand</span> <span class="selector-class">.post-block</span><span class="selector-pseudo">:not</span>(<span class="selector-pseudo">:first</span>-of-type) &#123;</span><br><span class="line">    <span class="attribute">margin-top</span>: <span class="number">60px</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">// 分页  </span><br><span class="line"><span class="selector-class">.pagination</span> &#123;</span><br><span class="line">  <span class="attribute">margin</span>: <span class="number">60px</span> <span class="number">0</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="selector-class">.pagination</span> <span class="selector-class">.prev</span>, <span class="selector-class">.pagination</span> <span class="selector-class">.next</span>, <span class="selector-class">.pagination</span> <span class="selector-class">.page-number</span>, <span class="selector-class">.pagination</span> <span class="selector-class">.space</span> &#123;</span><br><span class="line">    <span class="attribute">margin</span>: -<span class="number">1px</span> <span class="number">10px</span> <span class="number">0</span> <span class="number">0</span>;</span><br><span class="line">    <span class="attribute">padding</span>: <span class="number">0</span> <span class="number">10px</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">// 减小 tag 页面最上方的空隙</span><br><span class="line"><span class="selector-class">.tag</span> <span class="selector-class">.post-block</span><span class="selector-pseudo">:first</span>-of-type &#123;</span><br><span class="line">    <span class="attribute">padding-top</span>: <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">// 减小 category 页面最上方的空隙</span><br><span class="line"><span class="selector-class">.category</span> <span class="selector-class">.post-block</span><span class="selector-pseudo">:first</span>-of-type &#123;</span><br><span class="line">    <span class="attribute">padding-top</span>: <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">// 修改正文中的超链接颜色,但不修改阅读原文的链接颜色</span><br><span class="line"><span class="selector-class">.post-body</span> <span class="selector-tag">a</span><span class="selector-pseudo">:not</span>(<span class="selector-class">.btn</span>) &#123;</span><br><span class="line">  <span class="attribute">color</span>: <span class="built_in">var</span>(--post-body-link-color) //超链接显示颜色</span><br><span class="line">  border-bottom-color: <span class="built_in">var</span>(--post-body-link-color)</span><br><span class="line">  &amp;:hover &#123;</span><br><span class="line">    <span class="attribute">color</span>: <span class="built_in">var</span>(--post-body-link-hover-color);  //鼠标移动上去后超链接颜色</span><br><span class="line">    <span class="attribute">border-bottom-color</span>: <span class="built_in">var</span>(--post-body-link-hover-color)</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/hexo/" rel="tag"># hexo</a>
+              <a href="/tags/css/" rel="tag"># css</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2022/%E6%B7%B1%E5%88%BB%E7%90%86%E8%A7%A3-Golang-Slice/" rel="prev" title="深刻理解 Golang Slice">
+                  <i class="fa fa-angle-left"></i> 深刻理解 Golang Slice
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2024/frontend-background/" rel="next" title="关于前端项目构建的一些背景知识">
+                  关于前端项目构建的一些背景知识 <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 2017 – 
+    <span itemprop="copyrightYear">2025</span>
+    <span class="with-love">
+      <i class="fa-solid fa-sparkles"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">Akisaya</span>
+  </div>
+<div class="busuanzi-count">
+    <span class="post-meta-item" id="busuanzi_container_site_uv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/mist/" rel="noopener" target="_blank">NexT.Mist</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/schemes/muse.js"></script><script src="/js/sidebar.js"></script><script src="/js/next-boot.js"></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.4.1/search.js" integrity="sha256-1kfA5uHPf65M5cphT2dvymhkuyHPQp5A53EGZOnOLmc=" crossorigin="anonymous"></script>
+<script src="/js/third-party/search/local-search.js"></script>
+
+
+
+
+
+
+
+  
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+
+</body>
+</html>

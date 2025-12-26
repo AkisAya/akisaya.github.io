@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: dark)"><meta name="generator" content="Hexo 7.3.0">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+  <meta name="google-site-verification" content="google3ad31b3ddf733a7c.html">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha256-XOqroi11tY4EFQMR9ZYwZWKj5ZXiftSx36RRuC3anlA=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"akisaya.github.io","root":"/","images":"/images","scheme":"Mist","darkmode":true,"version":"8.20.0","exturl":false,"sidebar":{"position":"right","width_expanded":320,"width_dual_column":240,"display":"post","padding":18,"offset":12},"copycode":{"enable":true,"style":null},"fold":{"enable":true,"height":500},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":false,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false}}</script><script src="/js/config.js"></script>
+
+    <meta name="description" content="flink 是新一代的流式计算引擎，在 flink 的数据抽象里，数据都是流（stream），批数据就是有界的流（bounded stream），是流的特例，而 spark 所有的数据都是批数据（batch），spark 处理流数据是把流当作微批（micro batch）来处理，只能达到秒级别的准实时性。在数据处理的抽象程度上，flink 相比 spark 是更加先进的。当前许多公司已经用 fli">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Blink 适配 Hive 1.x">
+<meta property="og:url" content="https://akisaya.github.io/2019/Blink-%E9%80%82%E9%85%8D-Hive-1-x/index.html">
+<meta property="og:site_name" content="Inspiration">
+<meta property="og:description" content="flink 是新一代的流式计算引擎，在 flink 的数据抽象里，数据都是流（stream），批数据就是有界的流（bounded stream），是流的特例，而 spark 所有的数据都是批数据（batch），spark 处理流数据是把流当作微批（micro batch）来处理，只能达到秒级别的准实时性。在数据处理的抽象程度上，flink 相比 spark 是更加先进的。当前许多公司已经用 fli">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://akisaya.github.io/2019/Blink-%E9%80%82%E9%85%8D-Hive-1-x/flink-compatible1.png">
+<meta property="article:published_time" content="2019-05-18T20:21:52.000Z">
+<meta property="article:modified_time" content="2019-05-18T20:21:52.000Z">
+<meta property="article:author" content="Akisaya">
+<meta property="article:tag" content="flink">
+<meta property="article:tag" content="hive">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://akisaya.github.io/2019/Blink-%E9%80%82%E9%85%8D-Hive-1-x/flink-compatible1.png">
+
+
+<link rel="canonical" href="https://akisaya.github.io/2019/Blink-%E9%80%82%E9%85%8D-Hive-1-x/">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://akisaya.github.io/2019/Blink-%E9%80%82%E9%85%8D-Hive-1-x/","path":"2019/Blink-适配-Hive-1-x/","title":"Blink 适配 Hive 1.x"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>Blink 适配 Hive 1.x | Inspiration</title>
+  
+
+
+
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">Inspiration</p>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li><li class="menu-item menu-item-tools"><a href="/tools/" rel="section"><i class="fa fa-wrench fa-fw"></i>工具箱</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup"><div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off" maxlength="80"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close" role="button">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="search-result-container no-result">
+  <div class="search-result-icon">
+    <i class="fa fa-spinner fa-pulse fa-5x"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Hive-1-x-%E5%85%BC%E5%AE%B9%E6%80%A7"><span class="nav-number">1.</span> <span class="nav-text">Hive 1.x 兼容性</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Hive-varchar-%E9%80%82%E9%85%8D"><span class="nav-number">2.</span> <span class="nav-text">Hive varchar 适配</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#limit-%E5%A4%B1%E6%95%88%E9%97%AE%E9%A2%98"><span class="nav-number">3.</span> <span class="nav-text">limit 失效问题</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%81%97%E7%95%99%E9%97%AE%E9%A2%98"><span class="nav-number">4.</span> <span class="nav-text">遗留问题</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BB%93%E8%AF%AD"><span class="nav-number">5.</span> <span class="nav-text">结语</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Reference"><span class="nav-number">6.</span> <span class="nav-text">Reference</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Akisaya"
+      src="/uploads/avatar.jpg">
+  <p class="site-author-name" itemprop="name">Akisaya</p>
+  <div class="site-description" itemprop="description">Take A Leap of Faith</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">15</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">2</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">21</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/akisaya" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;akisaya" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:akisaya@foxmail.com" title="E-Mail → mailto:akisaya@foxmail.com" rel="noopener me" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://akisaya.github.io/2019/Blink-%E9%80%82%E9%85%8D-Hive-1-x/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/uploads/avatar.jpg">
+      <meta itemprop="name" content="Akisaya">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Inspiration">
+      <meta itemprop="description" content="Take A Leap of Faith">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="Blink 适配 Hive 1.x | Inspiration">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Blink 适配 Hive 1.x
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2019-05-19 04:21:52" itemprop="dateCreated datePublished" datetime="2019-05-19T04:21:52+08:00">2019-05-19</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/tech/" itemprop="url" rel="index"><span itemprop="name">tech</span></a>
+        </span>
+    </span>
+
+  
+    <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv">
+      <span class="post-meta-item-icon">
+        <i class="far fa-eye"></i>
+      </span>
+      <span class="post-meta-item-text">阅读次数：</span>
+      <span id="busuanzi_value_page_pv"></span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><p>flink 是新一代的流式计算引擎，在 flink 的数据抽象里，数据都是流（stream），批数据就是有界的流（bounded stream），是流的特例，而 spark 所有的数据都是批数据（batch），spark 处理流数据是把流当作微批（micro batch）来处理，只能达到秒级别的准实时性。在数据处理的抽象程度上，flink 相比 spark 是更加先进的。当前许多公司已经用 flink 取代 spark streaming 和 storm 作为流计算引擎的首选。flink 目前正在高速发展中，接入更多的数据源，但是在 flink 的主分支上对 hive 的数据接入还没有完善的支持，只有一个没人维护的 hcatalog 模块，blink 作为阿里的一个内部分支，已经开始支持 hive 数据源引入，并且阿里将其贡献出来作为 flink 的一个分支，并且 7 月份 blink 的特性就会 merge 到 flink 1.9 的主分支中。</p>
+<span id="more"></span>
+<p>在 flink 1.9 release 之前，要想使用 flink 接入 hive 数据源只能使用 blink 分支，但是该分支只是阿里开源出来的一个 MVP 产品，在尝试使用时碰到了一些兼容性的问题，本文记录一下遇到的问题以及解决方案</p>
+<h2 id="Hive-1-x-兼容性"><a href="#Hive-1-x-兼容性" class="headerlink" title="Hive 1.x 兼容性"></a>Hive 1.x 兼容性</h2><p>当尝试直接使用编译出来的 blink hive connector 去连接 hive 1.x 时，list table 报了如下错误<br><img src="/2019/Blink-%E9%80%82%E9%85%8D-Hive-1-x/flink-compatible1.png" alt="cannot get table"><br>查看 blink 的依赖发现 blink 默认引入了 hive 2.3.4 的 metastore，而我们访问的是 hive 1.x。hive 从 1.x 到 2.x 大版本升级后应该是 thrift 接口方法发生了大的改变，导致高版本的 hive metastore 无法正常访问到低版本，还好 hive connector 这个模块涉及到的类并不多，因此萌生了手动降依赖的想法，并排查修改一些不兼容的方法。<br>这个跟着 ide compile 的提示来就行了 </p>
+<ol>
+<li>修改 hive metastore 版本为 1.2.1</li>
+<li>修改 RetryingMetaStoreClient#getProxy 方法</li>
+<li>去除 1.x 不涉及到的属性定义</li>
+</ol>
+<p>具体的修改参见 <a target="_blank" rel="noopener" href="https://github.com/AkisAya/flink/compare/blink...AkisAya:blink-bumblebee">DIFF TO BLINK</a></p>
+<h2 id="Hive-varchar-适配"><a href="#Hive-varchar-适配" class="headerlink" title="Hive varchar 适配"></a>Hive varchar 适配</h2><p>经过上述的修改基本上已经可以连上 hive 1.x 了，但是对于 varchar 类型的字段处理还有问题，如果数据里有有这个类型 hive connector 读数据的时候会报类型转换错误</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">java.lang.ClassCastException: org.apache.hadoop.hive.common.type.HiveVarchar cannot be cast to java.lang.String</span><br></pre></td></tr></table></figure>
+<p>其原因在与 blink 分支甚至 flink 1.8 为止都不原生支持 varchar 类型，会将 hive varchar 类型转成 string 类型</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><span class="line">## HiveMetadataUtil</span><br><span class="line">/**</span><br><span class="line">	 * Convert a hive type to Flink internal type.</span><br><span class="line">	 * Note that even though serdeConstants.DATETIME_TYPE_NAME exists, Hive hasn&#x27;t officially support DATETIME type yet.</span><br><span class="line">	 */</span><br><span class="line">	public static InternalType convert(String hiveType) &#123;</span><br><span class="line">		// Note: Any type match changes should be updated in documentation of data type mapping at /dev/table/catalog.md</span><br><span class="line"></span><br><span class="line">		// First, handle types that have parameters such as CHAR(5), DECIMAL(6, 2), etc</span><br><span class="line">		if (isVarcharOrCharType(hiveType)) &#123;</span><br><span class="line">			// For CHAR(p) and VARCHAR(p) types, map them to String for now because Flink doesn&#x27;t yet support them.</span><br><span class="line">			return StringType.INSTANCE;</span><br><span class="line">		&#125; else if (isDecimalType(hiveType)) &#123;</span><br><span class="line">			return DecimalType.of(hiveType);</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		switch (hiveType) &#123;</span><br><span class="line">			case serdeConstants.STRING_TYPE_NAME:</span><br><span class="line">				return StringType.INSTANCE;</span><br><span class="line">			case serdeConstants.BOOLEAN_TYPE_NAME:</span><br><span class="line">				return BooleanType.INSTANCE;</span><br><span class="line">			case serdeConstants.TINYINT_TYPE_NAME:</span><br><span class="line">				return ByteType.INSTANCE;</span><br><span class="line">			case serdeConstants.SMALLINT_TYPE_NAME:</span><br><span class="line">				return ShortType.INSTANCE;</span><br><span class="line">			case serdeConstants.INT_TYPE_NAME:</span><br><span class="line">				return IntType.INSTANCE;</span><br><span class="line">			case serdeConstants.BIGINT_TYPE_NAME:</span><br><span class="line">				return LongType.INSTANCE;</span><br><span class="line">			case serdeConstants.FLOAT_TYPE_NAME:</span><br><span class="line">				return FloatType.INSTANCE;</span><br><span class="line">			case serdeConstants.DOUBLE_TYPE_NAME:</span><br><span class="line">				return DoubleType.INSTANCE;</span><br><span class="line">			case serdeConstants.DATE_TYPE_NAME:</span><br><span class="line">				return DateType.DATE;</span><br><span class="line">			case serdeConstants.TIMESTAMP_TYPE_NAME:</span><br><span class="line">				return TimestampType.TIMESTAMP;</span><br><span class="line">			case serdeConstants.BINARY_TYPE_NAME:</span><br><span class="line">				return ByteArrayType.INSTANCE;</span><br><span class="line">			default:</span><br><span class="line">				throw new UnsupportedOperationException(</span><br><span class="line">					String.format(&quot;Flink doesn&#x27;t support Hive&#x27;s type %s yet.&quot;, hiveType));</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
+<p>可以看到 varchar 转成了 flink 中的 string 类型<br>更奇葩的是，当要获取一些序列化信息的时候，从 flink 的 string 类型无法还原 varhcar 的序列化信息了，信息在转化过程中失真了，最终导致 varchar 本应该使用 varchar 的序列化类确使用了 string 的序列化类，于是报了类型转化错误</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line">/**</span><br><span class="line"> * Convert Flink&#x27;s internal type to String for hive.</span><br><span class="line"> */</span><br><span class="line">public static String convert(InternalType internalType) &#123;</span><br><span class="line">	if (internalType.equals(BooleanType.INSTANCE)) &#123;</span><br><span class="line">		return serdeConstants.BOOLEAN_TYPE_NAME;</span><br><span class="line">	&#125; else if (internalType.equals(ByteType.INSTANCE)) &#123;</span><br><span class="line">		return serdeConstants.TINYINT_TYPE_NAME;</span><br><span class="line">	&#125; else if (internalType.equals(ShortType.INSTANCE)) &#123;</span><br><span class="line">		return serdeConstants.SMALLINT_TYPE_NAME;</span><br><span class="line">	&#125; else if (internalType.equals(IntType.INSTANCE)) &#123;</span><br><span class="line">		return serdeConstants.INT_TYPE_NAME;</span><br><span class="line">	&#125; else if (internalType.equals(LongType.INSTANCE)) &#123;</span><br><span class="line">		return serdeConstants.BIGINT_TYPE_NAME;</span><br><span class="line">	&#125; else if (internalType.equals(FloatType.INSTANCE)) &#123;</span><br><span class="line">		return serdeConstants.FLOAT_TYPE_NAME;</span><br><span class="line">	&#125; else if (internalType.equals(DoubleType.INSTANCE)) &#123;</span><br><span class="line">		return serdeConstants.DOUBLE_TYPE_NAME;</span><br><span class="line">	&#125; else if (internalType.equals(StringType.INSTANCE)) &#123;</span><br><span class="line">		return serdeConstants.STRING_TYPE_NAME;</span><br><span class="line">	&#125; else if (internalType.equals(CharType.INSTANCE)) &#123;</span><br><span class="line">		return serdeConstants.CHAR_TYPE_NAME + &quot;(1)&quot;;</span><br><span class="line">	&#125; else if (internalType.equals(DateType.DATE)) &#123;</span><br><span class="line">		return serdeConstants.DATE_TYPE_NAME;</span><br><span class="line">	&#125; else if (internalType instanceof TimestampType) &#123;</span><br><span class="line">		return serdeConstants.TIMESTAMP_TYPE_NAME;</span><br><span class="line">	&#125; else if (internalType instanceof DecimalType) &#123;</span><br><span class="line">		return String.format(DECIMAL_TYPE_NAME_FORMAT, ((DecimalType) internalType).precision(), ((DecimalType) internalType).scale());</span><br><span class="line">	&#125; else if (internalType.equals(ByteArrayType.INSTANCE)) &#123;</span><br><span class="line">		return serdeConstants.BINARY_TYPE_NAME;</span><br><span class="line">	&#125; else &#123;</span><br><span class="line">		throw new UnsupportedOperationException(</span><br><span class="line">			String.format(&quot;Flink&#x27;s hive metadata integration doesn&#x27;t support Flink type %s yet.&quot;,</span><br><span class="line">				internalType.toString()));</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>继续 debug 可以发现问题处在</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"># HiveTableInputFormat，MR 任务读取 HDFS 的数据指定的 input format</span><br><span class="line">    deserializer = (Deserializer) Class.forName(serDeInfoClass).newInstance();</span><br><span class="line">    Configuration conf = new Configuration();</span><br><span class="line">    // 在这里获取序列化器</span><br><span class="line">    SerDeUtils.initializeSerDe(deserializer, conf, properties, null);</span><br><span class="line">    // Get the row structure</span><br><span class="line">    oi = (StructObjectInspector) deserializer.getObjectInspector();</span><br><span class="line">    fieldRefs = oi.getAllStructFieldRefs();</span><br></pre></td></tr></table></figure>
+<p>根据 properties 获取序列化器，那么这个 properties 是哪里来的呢？进一步跟踪可以找到</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"># HiveTableSource</span><br><span class="line">	private Properties createPropertiesFromSdParameters(StorageDescriptor storageDescriptor) &#123;</span><br><span class="line">		SerDeInfo serDeInfo = storageDescriptor.getSerdeInfo();</span><br><span class="line">		Map&lt;String, String&gt; parameters = serDeInfo.getParameters();</span><br><span class="line">		Properties properties = new Properties();</span><br><span class="line">		properties.setProperty(serdeConstants.SERIALIZATION_FORMAT,</span><br><span class="line">							serDeInfo.getParameters().get(serdeConstants.SERIALIZATION_FORMAT));</span><br><span class="line">		List&lt;String&gt; colTypes = new ArrayList&lt;&gt;();</span><br><span class="line">		List&lt;String&gt; colNames = new ArrayList&lt;&gt;();</span><br><span class="line">		List&lt;FieldSchema&gt; cols = storageDescriptor.getCols();</span><br><span class="line">		for (FieldSchema col: cols)&#123;</span><br><span class="line">			colTypes.add(col.getType());</span><br><span class="line">			colNames.add(col.getName());</span><br><span class="line">		&#125;</span><br><span class="line">		properties.setProperty(serdeConstants.LIST_COLUMNS, StringUtils.join(colNames, &quot;,&quot;));</span><br><span class="line">        // 这里设置了 column type，并且用的是 hive type 转化为 flink type 之后的 type，也就是这里信息失真了</span><br><span class="line">		properties.setProperty(serdeConstants.LIST_COLUMN_TYPES, StringUtils.join(colTypes, DEFAULT_LIST_COLUMN_TYPES_SEPARATOR));</span><br><span class="line">		properties.setProperty(serdeConstants.SERIALIZATION_NULL_FORMAT, &quot;NULL&quot;);</span><br><span class="line">		properties.putAll(parameters);</span><br><span class="line">		return properties;</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
+<p>在 HiveTableSource 里设置了列的所有类型，但是这个类型已经是被 flink 转化过的类型，看样子我们找到源头了，所以只要我们设置这个类型为原始的 hive 类型问题就得到了解决。幸运的是，HiveTableSource 在构造的时候本身就提供了一个字段 <code>hiveRowTypeString</code> 表示 hive 里该表的原生类型，我们用它替换掉 properties 里的属性即可，具体的修改参考 <a target="_blank" rel="noopener" href="https://github.com/AkisAya/flink/compare/blink...AkisAya:blink-bumblebee">DIFF TO BLINK</a></p>
+<p>没想到这么明显的错误居然被阿里的人 push 上来了，甚至于本身就写了注释意识到类型不能用 flink 转化后的类型而应该用 hive 原生类型。这个故事告诉我们永远不要相信 todo 的约束力。MVP 版本不愧为 MVP 版本，根本不应该用在生产上。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">// TODO: we should get StorageDescriptor from Hive Metastore somehow.</span><br><span class="line">StorageDescriptor sd = createStorageDescriptor(jobConf, rowTypeInfo);</span><br><span class="line">jobConf.setStrings(INPUT_DIR, sd.getLocation());</span><br><span class="line">Properties properties = createPropertiesFromSdParameters(sd);</span><br></pre></td></tr></table></figure>
+
+<h2 id="limit-失效问题"><a href="#limit-失效问题" class="headerlink" title="limit 失效问题"></a>limit 失效问题</h2><p>blink 的 api 相比 flink 还是有点出入的，在使用上有点要注意的<br>对于 hive 引入来说，需要设置</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">env.setJobType(JobType.BATCH);</span><br></pre></td></tr></table></figure>
+<p>不然 sql 里的 limit 会导致任务挂住</p>
+<h2 id="遗留问题"><a href="#遗留问题" class="headerlink" title="遗留问题"></a>遗留问题</h2><p>即便做了这些修改，blink 读取 hive 数据源的时候，仍无法正确处理分区字段类型为非 string 类型的数据，在写 flink sql 的时候，无法将分区字段 select 出来作为一个新的列。这是因为 blink 在处理分区字段时候把所有的分区字段值都读成了 string（因为直接从文件夹路径读的数据值），但是元数据信息里保存的类型不是 string 的时候就会进行类型转换，而这个类型转换基本都会失败。但是如果不把分区字段 select 出来作为一个新的列，而是放在 where 条件里倒是没有关系</p>
+<h2 id="结语"><a href="#结语" class="headerlink" title="结语"></a>结语</h2><p>flink 流处理方面确实很优秀，但是在数据源的兼容性上，离线的计算方面还是需要追赶 spark。flinlk 1.9 将在 7 月份发布，blink 特性会 merge 到主分支，提供 hive connector 和对低版本 hive 的兼容性，并且会重构类型系统原生支持 varchar 等类型。让我们静静期待吧。</p>
+<p>最后，千万不要在生产上使用未经验证的解决方案</p>
+<h2 id="Reference"><a href="#Reference" class="headerlink" title="Reference"></a>Reference</h2><p><a target="_blank" rel="noopener" href="http://blink.flink-china.org/">Blink 参考手册</a><br><a target="_blank" rel="noopener" href="https://zh.ververica.com/">Flink 社区</a></p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/flink/" rel="tag"># flink</a>
+              <a href="/tags/hive/" rel="tag"># hive</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2019/%E8%A7%A3%E5%86%B3-git-clone-%E9%80%9F%E5%BA%A6%E6%85%A2/" rel="prev" title="通过代理解决 git clone 和 homebrew 速度慢的问题">
+                  <i class="fa fa-angle-left"></i> 通过代理解决 git clone 和 homebrew 速度慢的问题
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2019/Ngnix-%E6%B5%81%E9%87%8F%E6%8B%B7%E8%B4%9D/" rel="next" title="Ngnix 流量拷贝">
+                  Ngnix 流量拷贝 <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 2017 – 
+    <span itemprop="copyrightYear">2025</span>
+    <span class="with-love">
+      <i class="fa-solid fa-sparkles"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">Akisaya</span>
+  </div>
+<div class="busuanzi-count">
+    <span class="post-meta-item" id="busuanzi_container_site_uv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/mist/" rel="noopener" target="_blank">NexT.Mist</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/schemes/muse.js"></script><script src="/js/sidebar.js"></script><script src="/js/next-boot.js"></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.4.1/search.js" integrity="sha256-1kfA5uHPf65M5cphT2dvymhkuyHPQp5A53EGZOnOLmc=" crossorigin="anonymous"></script>
+<script src="/js/third-party/search/local-search.js"></script>
+
+
+
+
+
+
+
+  
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+
+</body>
+</html>

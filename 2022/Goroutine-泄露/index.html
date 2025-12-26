@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: dark)"><meta name="generator" content="Hexo 7.3.0">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+  <meta name="google-site-verification" content="google3ad31b3ddf733a7c.html">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha256-XOqroi11tY4EFQMR9ZYwZWKj5ZXiftSx36RRuC3anlA=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"akisaya.github.io","root":"/","images":"/images","scheme":"Mist","darkmode":true,"version":"8.20.0","exturl":false,"sidebar":{"position":"right","width_expanded":320,"width_dual_column":240,"display":"post","padding":18,"offset":12},"copycode":{"enable":true,"style":null},"fold":{"enable":true,"height":500},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":false,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false}}</script><script src="/js/config.js"></script>
+
+    <meta name="description" content="golang 可以很方便的通过 go 关键字开一个协程，但是不正确的使用，也容易造成协程泄漏，下面分享我碰到的案例">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Goroutine 泄露案例分享">
+<meta property="og:url" content="https://akisaya.github.io/2022/Goroutine-%E6%B3%84%E9%9C%B2/index.html">
+<meta property="og:site_name" content="Inspiration">
+<meta property="og:description" content="golang 可以很方便的通过 go 关键字开一个协程，但是不正确的使用，也容易造成协程泄漏，下面分享我碰到的案例">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2022-07-24T02:21:17.000Z">
+<meta property="article:modified_time" content="2024-08-19T17:08:17.000Z">
+<meta property="article:author" content="Akisaya">
+<meta property="article:tag" content="golang">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="https://akisaya.github.io/2022/Goroutine-%E6%B3%84%E9%9C%B2/">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://akisaya.github.io/2022/Goroutine-%E6%B3%84%E9%9C%B2/","path":"2022/Goroutine-泄露/","title":"Goroutine 泄露案例分享"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>Goroutine 泄露案例分享 | Inspiration</title>
+  
+
+
+
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">Inspiration</p>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li><li class="menu-item menu-item-tools"><a href="/tools/" rel="section"><i class="fa fa-wrench fa-fw"></i>工具箱</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup"><div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off" maxlength="80"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close" role="button">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="search-result-container no-result">
+  <div class="search-result-icon">
+    <i class="fa fa-spinner fa-pulse fa-5x"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%B3%84%E6%BC%8F%E6%A1%88%E4%BE%8B"><span class="nav-number">1.</span> <span class="nav-text">泄漏案例</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-channel-%E5%AE%B9%E9%87%8F%E4%B8%8D%E5%BD%93%EF%BC%8C%E5%AF%BC%E8%87%B4%E5%8F%91%E9%80%81%E4%BD%86%E4%B8%8D%E6%8E%A5%E6%94%B6"><span class="nav-number">1.1.</span> <span class="nav-text">1 channel 容量不当，导致发送但不接收</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-%E5%BF%98%E8%AE%B0%E5%85%B3-channel-%E5%AF%BC%E8%87%B4%E6%B3%84%E6%BC%8F"><span class="nav-number">1.2.</span> <span class="nav-text">2 忘记关 channel 导致泄漏</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-timer-%E9%98%BB%E5%A1%9E"><span class="nav-number">1.3.</span> <span class="nav-text">3 timer 阻塞</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%A6%82%E4%BD%95%E5%8F%91%E7%8E%B0%E5%B9%B6%E6%8E%92%E6%9F%A5-goroutine-%E6%B3%84%E6%BC%8F"><span class="nav-number">2.</span> <span class="nav-text">如何发现并排查 goroutine 泄漏</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-%E7%9B%91%E6%8E%A7"><span class="nav-number">2.1.</span> <span class="nav-text">1 监控</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-pprof-%E6%9F%A5%E7%9C%8B-goroutine"><span class="nav-number">2.2.</span> <span class="nav-text">2 pprof 查看 goroutine</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%85%B6%E4%BB%96"><span class="nav-number">3.</span> <span class="nav-text">其他</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Akisaya"
+      src="/uploads/avatar.jpg">
+  <p class="site-author-name" itemprop="name">Akisaya</p>
+  <div class="site-description" itemprop="description">Take A Leap of Faith</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">15</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">2</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">21</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/akisaya" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;akisaya" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:akisaya@foxmail.com" title="E-Mail → mailto:akisaya@foxmail.com" rel="noopener me" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://akisaya.github.io/2022/Goroutine-%E6%B3%84%E9%9C%B2/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/uploads/avatar.jpg">
+      <meta itemprop="name" content="Akisaya">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Inspiration">
+      <meta itemprop="description" content="Take A Leap of Faith">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="Goroutine 泄露案例分享 | Inspiration">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Goroutine 泄露案例分享
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2022-07-24 10:21:17" itemprop="dateCreated datePublished" datetime="2022-07-24T10:21:17+08:00">2022-07-24</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2024-08-20 01:08:17" itemprop="dateModified" datetime="2024-08-20T01:08:17+08:00">2024-08-20</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/tech/" itemprop="url" rel="index"><span itemprop="name">tech</span></a>
+        </span>
+    </span>
+
+  
+    <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv">
+      <span class="post-meta-item-icon">
+        <i class="far fa-eye"></i>
+      </span>
+      <span class="post-meta-item-text">阅读次数：</span>
+      <span id="busuanzi_value_page_pv"></span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><p>golang 可以很方便的通过 go 关键字开一个协程，但是不正确的使用，也容易造成协程泄漏，下面分享我碰到的案例</p>
+<span id="more"></span>
+<h1 id="泄漏案例"><a href="#泄漏案例" class="headerlink" title="泄漏案例"></a>泄漏案例</h1><h2 id="1-channel-容量不当，导致发送但不接收"><a href="#1-channel-容量不当，导致发送但不接收" class="headerlink" title="1 channel 容量不当，导致发送但不接收"></a>1 channel 容量不当，导致发送但不接收</h2><p>通常我们在主线程有一个耗时的执行逻辑，希望控制超时时间，就会对耗时逻辑开一个 goroutine，同时主线程等待 timeout</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">ch := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">int</span>)</span><br><span class="line"><span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">    time.Sleep(<span class="number">1</span> * time.Second)</span><br><span class="line">    fmt.Println(<span class="string">&quot;&quot;</span>)</span><br><span class="line">    ch &lt;- <span class="number">1</span></span><br><span class="line">&#125;()</span><br><span class="line"></span><br><span class="line">timeout := time.After(<span class="number">200</span> * time.Millisecond)</span><br><span class="line"><span class="keyword">select</span> &#123;</span><br><span class="line">    <span class="keyword">case</span> &lt;-ch:</span><br><span class="line">    fmt.Println(<span class="string">&quot;run fast&quot;</span>)</span><br><span class="line">    <span class="keyword">case</span> &lt;-timeout:</span><br><span class="line">    fmt.Println(<span class="string">&quot;run timeout&quot;</span>)</span><br><span class="line">&#125;</span><br><span class="line">fmt.Println(<span class="string">&quot;done&quot;</span>)</span><br></pre></td></tr></table></figure>
+<p>乍一看，这个逻辑好像没有问题，但是如果一旦超时发生了我们的 goroutine 却会被阻塞在 <code>ch &lt;- 1</code>这一行，因为超时一旦发生，select 逻辑执行完毕，最终 ch 就失去了接收者，那么发送方就会发生阻塞，导致 goroutine 无法运行结束。这里关键就在于声明 ch 的时候，没有给定容量。所以最简单的解决方法就是生命一个容量为 1 的 ch。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">ch := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">int</span>, <span class="number">1</span>)</span><br><span class="line">...</span><br></pre></td></tr></table></figure>
+<h2 id="2-忘记关-channel-导致泄漏"><a href="#2-忘记关-channel-导致泄漏" class="headerlink" title="2 忘记关 channel 导致泄漏"></a>2 忘记关 channel 导致泄漏</h2><p>大部分情况下，channel 不需要我们手动关闭，使用完之后会被垃圾回收掉。不过如果我们在做一个资源清理，重置之类的逻辑的时候就需要注意 channel 的使用是否被正确关闭了。<br>这里举一个 hystrix-go 开源库的一个忘记关闭 channel 导致泄漏的 bug，<a target="_blank" rel="noopener" href="https://github.com/afex/hystrix-go/pull/64">Fix goroutines leakage when flushing hystrix configuration</a>, hystrix-go 有个 flush 操作，清除限流的配置，但是原来在配置的时候，开了一个 goroutine，对请求采样监控，里面有一段逻辑是</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// m.Updates 是一个 channel</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(m *poolMetrics)</span></span> Monitor() &#123;</span><br><span class="line">	<span class="keyword">for</span> u := <span class="keyword">range</span> m.Updates &#123;</span><br><span class="line">		m.Mutex.RLock()</span><br><span class="line"></span><br><span class="line">		m.Executed.Increment(<span class="number">1</span>)</span><br><span class="line">		m.MaxActiveRequests.UpdateMax(<span class="type">float64</span>(u.activeCount))</span><br><span class="line"></span><br><span class="line">		m.Mutex.RUnlock()</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>也就是 channel 有接收者(此处为 m.Updates)，但是由于 flush 之后，channel 没有 close，导致这个 monitor 的逻辑不会退出。最简单的修复方式自然是 flush 时加上 close channel 的方法，具体可以参考上文中的 pr。不过 hystrix-go 这个项目基本没在维护了，这个 pr 是没有被 merge。</p>
+<h2 id="3-timer-阻塞"><a href="#3-timer-阻塞" class="headerlink" title="3 timer 阻塞"></a>3 timer 阻塞</h2><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(l *MysqlLocker)</span></span> keepAlive() &#123;</span><br><span class="line">	tick := <span class="number">10</span></span><br><span class="line">	timer := time.NewTimer(time.Duration(tick) * time.Second)</span><br><span class="line">	<span class="keyword">defer</span> timer.Stop()</span><br><span class="line">	<span class="keyword">for</span> &#123;</span><br><span class="line">		<span class="keyword">select</span> &#123;</span><br><span class="line">		<span class="keyword">case</span> &lt;-timer.C:</span><br><span class="line">			<span class="comment">// do something</span></span><br><span class="line">            doSomething()</span><br><span class="line">			timer.Reset(time.Duration(tick) * time.Second)</span><br><span class="line">		<span class="keyword">case</span> &lt;-l.donec:</span><br><span class="line">			<span class="comment">// This &quot;if&quot; block is important.</span></span><br><span class="line">			<span class="comment">// the if code block is used to discard/drain a possible timer notification</span></span><br><span class="line">			<span class="keyword">if</span> !timer.Stop() &#123;</span><br><span class="line">				&lt;-timer.C</span><br><span class="line">			&#125;</span><br><span class="line"></span><br><span class="line">			<span class="keyword">break</span></span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>我们有个 mysql 锁，要定期给锁续期，用到了 timer 做定时任务，如果锁释放了，<code>l.donec</code>这个 channel 会受到消息，最后退出续期的逻辑<br>这段代码里，很容易忽略掉<code>if !timer.Stop() &#123; &lt;-timer.C &#125;</code>这段 if 判断。如果没有这个判断去消费可能存在 channel 中的消息，那发送方就会阻塞，最终造成 timer 泄露。如果我们查看 timer 的 stop 方法，就会发现这个 if 判断也是推荐的做法</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// To ensure the channel is empty after a call to Stop, check the</span></span><br><span class="line"><span class="comment">// return value and drain the channel.</span></span><br><span class="line"><span class="comment">// For example, assuming the program has not received from t.C already:</span></span><br><span class="line"><span class="comment">//</span></span><br><span class="line"><span class="comment">// 	if !t.Stop() &#123;</span></span><br><span class="line"><span class="comment">// 		&lt;-t.C</span></span><br><span class="line"><span class="comment">// 	&#125;</span></span><br></pre></td></tr></table></figure>
+<h1 id="如何发现并排查-goroutine-泄漏"><a href="#如何发现并排查-goroutine-泄漏" class="headerlink" title="如何发现并排查 goroutine 泄漏"></a>如何发现并排查 goroutine 泄漏</h1><h2 id="1-监控"><a href="#1-监控" class="headerlink" title="1 监控"></a>1 监控</h2><p>首先我们可以对应用的 goroutine 进行监控，prometheus 本身就有开箱即用的监控指标，引入 prometheus sdk，在 grafana 这样子的可视化监控 dashboard 上配置好图标就行，发现不正常的增长就需要立刻排查。</p>
+<h2 id="2-pprof-查看-goroutine"><a href="#2-pprof-查看-goroutine" class="headerlink" title="2 pprof 查看 goroutine"></a>2 pprof 查看 goroutine</h2><p>go 内置的 pprof 工具可以很方便的查看 goroutine 的数量分布</p>
+<h1 id="其他"><a href="#其他" class="headerlink" title="其他"></a>其他</h1><p>别人总结的<br><a target="_blank" rel="noopener" href="https://www.ardanlabs.com/blog/2018/11/goroutine-leaks-the-forgotten-sender.html">Goroutine Leaks - The Forgotten Sender</a><br><a target="_blank" rel="noopener" href="https://juejin.cn/post/6844903891935461383">如何防止 goroutine 泄露 - 掘金</a></p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/golang/" rel="tag"># golang</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2020/%E8%81%8A%E8%81%8A-Mybatis-%E7%9A%84-TypeHandler/" rel="prev" title="聊聊 Mybatis 的 TypeHandler">
+                  <i class="fa fa-angle-left"></i> 聊聊 Mybatis 的 TypeHandler
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2022/%E6%B7%B1%E5%88%BB%E7%90%86%E8%A7%A3-Golang-Slice/" rel="next" title="深刻理解 Golang Slice">
+                  深刻理解 Golang Slice <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 2017 – 
+    <span itemprop="copyrightYear">2025</span>
+    <span class="with-love">
+      <i class="fa-solid fa-sparkles"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">Akisaya</span>
+  </div>
+<div class="busuanzi-count">
+    <span class="post-meta-item" id="busuanzi_container_site_uv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/mist/" rel="noopener" target="_blank">NexT.Mist</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/schemes/muse.js"></script><script src="/js/sidebar.js"></script><script src="/js/next-boot.js"></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.4.1/search.js" integrity="sha256-1kfA5uHPf65M5cphT2dvymhkuyHPQp5A53EGZOnOLmc=" crossorigin="anonymous"></script>
+<script src="/js/third-party/search/local-search.js"></script>
+
+
+
+
+
+
+
+  
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+
+</body>
+</html>
