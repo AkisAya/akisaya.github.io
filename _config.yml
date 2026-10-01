@@ -34,7 +34,8 @@ code_dir: downloads/code
 i18n_dir: :lang
 skip_render:
     - google3ad31b3ddf733a7c.html
-    - 'tools/*.html'
+    - 'treasure/*.html'
+    - 'htmls/*.html'
 
 
 # Home page setting
