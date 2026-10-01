@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WorkBuddy 内核架构 · 图解</title>
+<style>
+:root{
+  --bg:#f5f6f8; --card:#ffffff; --ink:#15181d; --ink2:#5c6470; --ink3:#8b93a1;
+  --line:#e2e6ec; --line2:#cfd6de;
+  --brand:#2f6fed; --brand-bg:#eaf1ff; --brand-ink:#1d4fb8;
+  --warn:#c77700; --warn-bg:#fdf4e3;
+  --danger:#cf3b2f; --danger-bg:#fdecea;
+  --ok:#0d8a4f; --ok-bg:#e6f6ec;
+  --purple:#6d45e0; --purple-bg:#f0eaff;
+  --teal:#0b7c86; --teal-bg:#e4f5f7;
+  --shadow:0 1px 2px rgba(16,24,40,.05),0 8px 24px rgba(16,24,40,.06);
+  --radius:14px;
+  --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0f1116; --card:#171a21; --ink:#e9ecf1; --ink2:#a3abb8; --ink3:#767e8c;
+    --line:#272c35; --line2:#343b46;
+    --brand:#6ea1ff; --brand-bg:#16233d; --brand-ink:#a8c6ff;
+    --warn:#e0a548; --warn-bg:#33280f;
+    --danger:#f0736a; --danger-bg:#3a1a18;
+    --ok:#4fc98c; --ok-bg:#122c20;
+    --purple:#a98bff; --purple-bg:#221a3d;
+    --teal:#4fc4cf; --teal-bg:#0e2b2e;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 10px 30px rgba(0,0,0,.35);
+  }
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  background:var(--bg); color:var(--ink);
+  font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",system-ui,sans-serif;
+  -webkit-font-smoothing:antialiased; overflow:hidden;
+}
+.deck{position:relative;height:100vh;width:100%}
+.slide{
+  position:absolute; inset:0; display:none;
+  flex-direction:column; padding:56px 72px 84px;
+  overflow:auto;
+}
+.slide.active{display:flex; animation:in .38s cubic-bezier(.2,.7,.3,1)}
+@keyframes in{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+
+/* ---------- 头部 ---------- */
+.eyebrow{
+  font-size:13px; letter-spacing:.14em; text-transform:uppercase;
+  color:var(--brand); font-weight:700; margin-bottom:12px;
+}
+h1{font-size:46px; line-height:1.18; letter-spacing:-.02em; font-weight:750}
+h2{font-size:33px; line-height:1.25; letter-spacing:-.015em; font-weight:720; margin-bottom:6px}
+.lede{
+  margin-top:10px; font-size:17px; line-height:1.6; color:var(--ink2); max-width:900px;
+}
+.lede b{color:var(--ink); font-weight:650}
+.body{flex:1; display:flex; flex-direction:column; justify-content:center; gap:22px; margin-top:26px}
+
+/* ---------- 通用块 ---------- */
+.card{background:var(--card); border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow)}
+.pad{padding:22px 24px}
+.grid{display:grid; gap:16px}
+.g2{grid-template-columns:1fr 1fr}
+.g3{grid-template-columns:repeat(3,1fr)}
+.g4{grid-template-columns:repeat(4,1fr)}
+.g5{grid-template-columns:repeat(5,1fr)}
+
+.kpi{background:var(--card); border:1px solid var(--line); border-radius:var(--radius); padding:18px 18px 16px; box-shadow:var(--shadow)}
+.kpi .n{font-size:34px; font-weight:760; letter-spacing:-.02em; line-height:1}
+.kpi .l{font-size:13px; color:var(--ink2); margin-top:8px; line-height:1.45}
+.kpi.b{background:var(--brand-bg); border-color:transparent}
+.kpi.b .n{color:var(--brand-ink)}
+.kpi.w{background:var(--warn-bg); border-color:transparent}
+.kpi.w .n{color:var(--warn)}
+.kpi.d{background:var(--danger-bg); border-color:transparent}
+.kpi.d .n{color:var(--danger)}
+.kpi.g{background:var(--ok-bg); border-color:transparent}
+.kpi.g .n{color:var(--ok)}
+.kpi.p{background:var(--purple-bg); border-color:transparent}
+.kpi.p .n{color:var(--purple)}
+
+.tag{display:inline-block; font-size:12px; font-weight:650; padding:3px 9px; border-radius:999px; background:var(--brand-bg); color:var(--brand-ink)}
+.tag.o{background:var(--warn-bg); color:var(--warn)}
+.tag.r{background:var(--danger-bg); color:var(--danger)}
+.tag.g{background:var(--ok-bg); color:var(--ok)}
+.tag.p{background:var(--purple-bg); color:var(--purple)}
+.tag.t{background:var(--teal-bg); color:var(--teal)}
+.tag.gray{background:var(--line); color:var(--ink2)}
+
+.h{font-size:14px; font-weight:700; color:var(--ink2); letter-spacing:.02em; margin-bottom:10px}
+
+table{width:100%; border-collapse:collapse; font-size:14px}
+th,td{padding:9px 12px; text-align:left; border-bottom:1px solid var(--line); vertical-align:top}
+th{font-size:12.5px; color:var(--ink2); font-weight:650; letter-spacing:.03em; background:transparent}
+tbody tr:last-child td{border-bottom:none}
+td code,th code{font-family:var(--mono); font-size:12.5px; background:var(--bg); padding:1px 5px; border-radius:4px; border:1px solid var(--line)}
+.small{font-size:13px; color:var(--ink2); line-height:1.6}
+
+/* ---------- 三层骨架 ---------- */
+.layer{border-radius:var(--radius); padding:16px 18px; border:1.5px solid var(--line2); position:relative}
+.layer.l1{background:var(--brand-bg); border-color:var(--brand)}
+.layer.l2{background:var(--card); border-color:var(--brand); border-style:solid}
+.layer.l3{background:var(--warn-bg); border-color:var(--warn)}
+.layer .lt{display:flex; align-items:center; gap:10px; margin-bottom:10px}
+.layer .lt .id{
+  font-family:var(--mono); font-size:12px; font-weight:700; padding:3px 8px; border-radius:6px;
+  background:var(--brand); color:#fff;
+}
+.layer.l3 .lt .id{background:var(--warn)}
+.layer .lt .nm{font-size:16px; font-weight:700}
+.layer .lt .gr{margin-left:auto; font-size:12px; color:var(--ink2); font-family:var(--mono)}
+.steps{display:flex; flex-wrap:wrap; gap:7px}
+.step{
+  font-size:12.5px; padding:6px 10px; border-radius:8px; background:var(--card);
+  border:1px solid var(--line); color:var(--ink); font-family:var(--mono)
+}
+.layer.l3 .step{background:#fff}
+@media (prefers-color-scheme: dark){ .layer.l3 .step{background:var(--card)} }
+.nest{margin-left:26px; border-left:2px dashed var(--line2); padding-left:20px}
+
+/* ---------- 流程 ---------- */
+.flow{display:flex; align-items:center; gap:8px; flex-wrap:wrap}
+.node{
+  padding:9px 13px; border-radius:9px; font-size:13.5px; font-weight:600;
+  background:var(--card); border:1.5px solid var(--line2); white-space:nowrap
+}
+.node.acc{border-color:var(--brand); background:var(--brand-bg); color:var(--brand-ink)}
+.node.warnn{border-color:var(--warn); background:var(--warn-bg); color:var(--warn)}
+.node.dang{border-color:var(--danger); background:var(--danger-bg); color:var(--danger)}
+.node.okn{border-color:var(--ok); background:var(--ok-bg); color:var(--ok)}
+.arw{color:var(--ink3); font-size:15px; font-family:var(--mono)}
+
+/* ---------- 环形分层 ---------- */
+.ring{display:flex; align-items:center; justify-content:center; gap:34px}
+.ring svg{flex:0 0 auto}
+.legend{display:flex; flex-direction:column; gap:14px; max-width:430px}
+.lg{display:flex; gap:12px; align-items:flex-start}
+.sw{width:12px; height:12px; border-radius:3px; margin-top:5px; flex:0 0 auto}
+.lg .t{font-size:15px; font-weight:700}
+.lg .d{font-size:13px; color:var(--ink2); line-height:1.55; margin-top:3px}
+
+/* ---------- 对比列 ---------- */
+.col{display:flex; flex-direction:column; gap:0; border-radius:var(--radius); overflow:hidden; border:1.5px solid var(--line2); background:var(--card)}
+.col .ch{padding:12px 16px; font-weight:700; font-size:15px; display:flex; align-items:center; gap:9px; border-bottom:1px solid var(--line)}
+.col .cb{padding:14px 16px; font-size:13.5px; color:var(--ink2); line-height:1.65}
+.col .cb b{color:var(--ink)}
+.col .cf{padding:11px 16px; border-top:1px solid var(--line); font-size:12.5px; background:var(--bg); color:var(--ink2)}
+.col.blue{border-color:var(--brand)} .col.blue .ch{background:var(--brand-bg); color:var(--brand-ink)}
+.col.orange{border-color:var(--warn)} .col.orange .ch{background:var(--warn-bg); color:var(--warn)}
+.col.purplec{border-color:var(--purple)} .col.purplec .ch{background:var(--purple-bg); color:var(--purple)}
+.col.tealc{border-color:var(--teal)} .col.tealc .ch{background:var(--teal-bg); color:var(--teal)}
+.col.redc{border-color:var(--danger)} .col.redc .ch{background:var(--danger-bg); color:var(--danger)}
+.col.greenc{border-color:var(--ok)} .col.greenc .ch{background:var(--ok-bg); color:var(--ok)}
+
+/* ---------- 树 ---------- */
+.tree{font-family:var(--mono); font-size:13px; line-height:2; background:var(--card); border:1px solid var(--line); border-radius:var(--radius); padding:20px 22px}
+.tree .dead{color:var(--ink3); text-decoration:line-through}
+.tree .live{color:var(--ok); font-weight:650}
+.tree .note{color:var(--warn); font-weight:650}
+
+/* ---------- 水位条 ---------- */
+.bar{height:26px; border-radius:8px; background:var(--line); position:relative; overflow:hidden}
+.bar .fill{position:absolute; left:0; top:0; bottom:0; background:var(--brand); opacity:.85}
+.mark{position:absolute; top:-6px; bottom:-6px; width:2px; background:var(--ink)}
+.mark span{
+  position:absolute; top:-20px; left:50%; transform:translateX(-50%);
+  font-size:11px; font-family:var(--mono); white-space:nowrap; color:var(--ink2)
+}
+.scale{display:flex; justify-content:space-between; font-size:11.5px; color:var(--ink3); font-family:var(--mono); margin-top:6px}
+
+/* ---------- 桶 ---------- */
+.buckets{display:flex; border-radius:10px; overflow:hidden; border:1px solid var(--line); height:44px}
+.bk{display:flex; align-items:center; justify-content:center; font-size:12.5px; font-weight:650; color:#fff; white-space:nowrap; overflow:hidden}
+.bk.s1{background:#2f6fed} .bk.s2{background:#4a8aef} .bk.s3{background:#7c4dff}
+.bk.s4{background:#0b7c86} .bk.s5{background:#c77700}
+
+/* ---------- 底部 ---------- */
+.foot{
+  position:absolute; left:72px; right:72px; bottom:26px;
+  font-size:12.5px; color:var(--ink3); display:flex; gap:14px; align-items:center;
+  border-top:1px solid var(--line); padding-top:12px;
+}
+.foot .src{margin-left:auto; font-family:var(--mono); font-size:11.5px}
+
+/* ---------- 导航 ---------- */
+.nav{position:fixed; right:22px; bottom:20px; display:flex; gap:8px; z-index:20}
+.nav button{
+  width:38px; height:38px; border-radius:10px; border:1px solid var(--line);
+  background:var(--card); color:var(--ink); cursor:pointer; font-size:16px;
+  box-shadow:var(--shadow); display:flex; align-items:center; justify-content:center;
+}
+.nav button:hover{border-color:var(--brand); color:var(--brand)}
+.prog{position:fixed; left:0; top:0; height:3px; background:var(--brand); z-index:30; transition:width .3s}
+.pg{position:fixed; right:24px; top:22px; font-size:12px; color:var(--ink3); font-family:var(--mono); z-index:20}
+.hint{position:fixed; left:24px; top:22px; font-size:11.5px; color:var(--ink3); z-index:20}
+
+@media (max-width:1080px){
+  .slide{padding:40px 34px 76px}
+  h1{font-size:36px} h2{font-size:27px}
+  .g4,.g5{grid-template-columns:repeat(2,1fr)}
+  .g3{grid-template-columns:1fr}
+  .foot{left:34px;right:34px}
+}
+@media print{
+  body{overflow:visible} .slide{display:flex!important; position:relative; height:100vh; page-break-after:always}
+  .nav,.prog,.pg,.hint{display:none}
+}
+</style>
+</head>
+<body>
+<div class="prog" id="prog"></div>
+<div class="hint">← → 翻页 · 或滚轮 / 点击</div>
+<div class="pg" id="pg">01 / 14</div>
+
+<div class="deck" id="deck">
+
+<!-- 1 封面 -->
+<section class="slide active">
+  <div class="eyebrow">CodeBuddy Agent 内核 · 深度架构解析</div>
+  <h1>WorkBuddy 技术架构图解</h1>
+  <div class="lede">
+    从<b>一次推理循环</b>出发，往外长出整个 harness，最后才接到人。<br>
+    全部结论来自本机 <code style="font-family:var(--mono);font-size:14px">/Applications/WorkBuddy.app</code> 与 <code style="font-family:var(--mono);font-size:14px">~/.workbuddy</code> 的实际产物。
+  </div>
+  <div class="body">
+    <div class="grid g4">
+      <div class="kpi b"><div class="n">60</div><div class="l">内置工具<br>（23 个延迟加载）</div></div>
+      <div class="kpi p"><div class="n">19</div><div class="l">系统级 agent<br>（仅 4 个面向用户）</div></div>
+      <div class="kpi g"><div class="n">28</div><div class="l">Hook 事件<br>（唯一对外开放的插座）</div></div>
+      <div class="kpi w"><div class="n">500</div><div class="l">maxTurns 真实上限<br>（不是配置里的 100）</div></div>
+    </div>
+    <div class="grid g4">
+      <div class="kpi"><div class="n">48</div><div class="l">注册模型<br>以国产模型为主</div></div>
+      <div class="kpi"><div class="n">123</div><div class="l">提示词模板<br>全库最大 25KB</div></div>
+      <div class="kpi"><div class="n">77</div><div class="l">外部 MCP 工具<br>7 个 server</div></div>
+      <div class="kpi"><div class="n">8</div><div class="l">权限模式<br>从 Always Ask 到 Full Access</div></div>
+    </div>
+  </div>
+  <div class="foot"><span>版本 5.6.2 · 包名 @genie/workbuddy-desktop</span><span class="src">共 14 页</span></div>
+</section>
+
+<!-- 2 立意 -->
+<section class="slide">
+  <div class="eyebrow">阅读主线</div>
+  <h2>整个 harness 是从裸 loop 的失效模式里长出来的</h2>
+  <div class="lede">每一个子系统都不是凭空设计的功能模块，而是<b>裸 loop 在某个具体失效模式上被打补丁，补丁长大成了模块</b>。</div>
+  <div class="body">
+    <div class="grid g2">
+      <div class="card pad">
+        <div class="h">裸 loop 只有五行</div>
+        <div class="flow" style="margin-top:6px">
+          <span class="node">收消息</span><span class="arw">→</span>
+          <span class="node acc">调模型</span><span class="arw">→</span>
+          <span class="node">有没有 tool_use ?</span><span class="arw">→</span>
+          <span class="node">执行工具</span><span class="arw">↻</span>
+        </div>
+        <div class="small" style="margin-top:16px">它跑得起来，但在真实任务里会在十个地方崩掉。</div>
+        <div class="tree" style="margin-top:14px; font-size:12.5px; line-height:1.9">
+          <div>1. 上下文窗口有限 → <b>Context 治理</b></div>
+          <div>2. 会话结束即失忆 → <b>Memory</b></div>
+          <div>3. 工具越多 prompt 越大 → <b>延迟装载 + 缓存</b></div>
+          <div>4. 模型不会做领域任务 → <b>Skill</b></div>
+          <div>5. 模型会做危险的事 → <b>权限 + 沙箱</b></div>
+          <div>6–8. 污染 / 即兴 / 写冲突 → <b>Subagent · Workflow · Worktree</b></div>
+          <div>9. 进度不可见 → <b>Task</b>　10. 只能被人驱动 → <b>驱动源解耦</b></div>
+        </div>
+      </div>
+      <div class="card pad">
+        <div class="h">抽象成三招</div>
+        <div class="grid" style="gap:12px; margin-top:4px">
+          <div class="col blue"><div class="ch">① 把信息移出上下文</div><div class="cb">压缩、子 agent 隔离、worktree 隔离——让主线上下文只装推理必需品。</div></div>
+          <div class="col greenc"><div class="ch">② 把知识移进上下文</div><div class="cb">Skill 加载、记忆召回、ToolSearch——让模型「恰好知道该知道的」，且<b>按需</b>。</div></div>
+          <div class="col redc"><div class="ch">③ 把决策移出模型</div><div class="cb">Workflow 用代码定控制流、权限用规则+LLM 双裁决、沙箱用 OS 强制——<b>在模型不可靠的地方不依赖模型的自觉</b>。</div></div>
+        </div>
+        <div class="small" style="margin-top:16px; padding:12px 14px; background:var(--warn-bg); border-radius:10px; color:var(--ink)">
+          <b>第 3 招最能说明这套系统的性格：它不信任模型。</b>压缩提示词里「不要重做已完成的事」重复三次、workflow 脚本禁用 <code style="font-family:var(--mono)">Date.now()</code>、权限规则特意澄清引文不构成授权——全是同一条主线。
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="foot"><span>判据：改动它会不会改变「一次推理循环的形状」</span><span class="src">§0 · §0.2 · §0.3</span></div>
+</section>
+
+<!-- 3 骨架 -->
+<section class="slide">
+  <div class="eyebrow">核心 · 骨架</div>
+  <h2>Loop 的三层结构：run / turn / 模型调用前</h2>
+  <div class="lede">真正的循环体是 <b>L2 那个 <code style="font-family:var(--mono)">for(;;)</code></b>。L3 只是循环体里一个写死的步骤——把「每轮跑一次的函数」误认成骨架，是最容易犯的错。</div>
+  <div class="body">
+    <div class="layer l1">
+      <div class="lt"><span class="id">L1</span><span class="nm">run 生命周期 · AgentService.run()</span><span class="gr">每次 run 一次</span></div>
+      <div class="flow">
+        <span class="node">鉴权</span><span class="arw">→</span>
+        <span class="node">runnerProvider.get()</span><span class="arw">→</span>
+        <span class="node">opts.maxTurns</span><span class="arw">→</span>
+        <span class="node acc">Interceptor 管线 sortSync()</span><span class="arw">→</span>
+        <span class="node">工具表刷新</span><span class="arw">→</span>
+        <span class="node">sessionManager.run(...)</span>
+      </div>
+      <div class="nest" style="margin-top:16px">
+        <div class="layer l2">
+          <div class="lt"><span class="id">L2</span><span class="nm">turn 循环 · Runner.run() 的 for(;;)</span><span class="gr">每轮一次 ← 这才是 loop</span></div>
+          <div class="flow">
+            <span class="node">beginTurn<br><span style="font-weight:400;font-size:11px">_currentTurn++</span></span><span class="arw">→</span>
+            <span class="node acc">#a() 准备输入</span><span class="arw">→</span>
+            <span class="node acc">model.getResponse()</span><span class="arw">→</span>
+            <span class="node">processModelResponse</span><span class="arw">→</span>
+            <span class="node">执行工具</span><span class="arw">→</span>
+            <span class="node">applyTurnResult</span><span class="arw">↻</span>
+          </div>
+          <div class="grid g4" style="margin-top:14px">
+            <div class="kpi g" style="padding:12px"><div class="n" style="font-size:15px">final_output</div><div class="l">返回最终结果</div></div>
+            <div class="kpi w" style="padding:12px"><div class="n" style="font-size:15px">run_again</div><div class="l">continue → 下一轮</div></div>
+            <div class="kpi p" style="padding:12px"><div class="n" style="font-size:15px">handoff</div><div class="l">换 agent 继续</div></div>
+            <div class="kpi d" style="padding:12px"><div class="n" style="font-size:15px">interruption</div><div class="l">返回可恢复状态</div></div>
+          </div>
+          <div class="nest" style="margin-top:16px">
+            <div class="layer l3">
+              <div class="lt"><span class="id">L3</span><span class="nm">模型调用前 · callModelInputFilter（写死的五步）</span><span class="gr">每轮一次，不可扩展</span></div>
+              <div class="steps">
+                <span class="step">① flushHistory</span>
+                <span class="step">② 死循环检测</span>
+                <span class="step">③ checkAutoCompact</span>
+                <span class="step">④ 超大调用裁剪</span>
+                <span class="step">⑤ 注入</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="small">终止边界实测：<b style="color:var(--ink)">DEFAULT_MAX_TURNS = 500</b>（env <code style="font-family:var(--mono)">CODEBUDDY_CODE_MAX_TURNS</code>），子 agent 下限 200。配置里的 <code style="font-family:var(--mono)">requestMaxStepLimit=100</code> 全产物零引用，是死配置。</div>
+  </div>
+  <div class="foot"><span>内嵌 OpenAI Agents SDK：RunState / next_step_* / AgentToolUseTracker</span><span class="src">§1 · §1.2 · §1.3 · §1.4</span></div>
+</section>
+
+<!-- 4 三类挂载 -->
+<section class="slide">
+  <div class="eyebrow">核心 · 插座</div>
+  <h2>三类挂载机制：harness 插进 loop 的三个插座</h2>
+  <div class="lede">不是「要么写死要么可配置」，而是<b>三层并存</b>，粒度完全不同：每次 run / 每轮 / 事件触发。</div>
+  <div class="body">
+    <div class="grid g3">
+      <div class="col redc">
+        <div class="ch"><span class="tag r">①</span> 写死在循环里</div>
+        <div class="cb">
+          <b>挂在哪：</b>L3 固定五步 + L2 工具执行 + maxTurns 终止<br><br>
+          <b>谁可扩展：</b><span style="color:var(--danger)">不可扩展</span><br><br>
+          <b>典型使用者：</b>压缩水位判断与执行、死循环检测、超大调用裁剪
+        </div>
+        <div class="cf">判据：必须在每次模型调用前无条件执行，且失败要兜底</div>
+      </div>
+      <div class="col blue">
+        <div class="ch"><span class="tag">②</span> Interceptor 管线</div>
+        <div class="cb">
+          <b>挂在哪：</b><span style="color:var(--brand-ink)">L1 · 每次 run 一次，在循环外</span><br><br>
+          <b>谁可扩展：</b>仅内部（DI 注册）<br><br>
+          <b>典型使用者：</b>记忆召回、plugin runtime join、managed agent 隔离
+        </div>
+        <div class="cf">判据：需要加工上下文，但一次 run 开头做一次就够</div>
+      </div>
+      <div class="col purplec">
+        <div class="ch"><span class="tag p">③</span> Hook 框架</div>
+        <div class="cb">
+          <b>挂在哪：</b>L2 循环内的<span style="color:var(--purple)"> 28 个事件点</span><br><br>
+          <b>谁可扩展：</b>用户 / 插件 / skill / agent frontmatter<br><br>
+          <b>典型使用者：</b>Stop 记忆抽取、PostToolUse 新鲜度、PreCompact 会话摘要
+        </div>
+        <div class="cf">判据：需要在循环内某个具体时刻观测或拦截，且对外开放</div>
+      </div>
+    </div>
+    <div class="card pad">
+      <div class="h">混合体是常态，不是例外</div>
+      <div class="grid g2" style="margin-top:4px">
+        <div class="small"><b style="color:var(--ink)">压缩 = 写死 + 派发事件</b>：水位判断与执行写死在 L3 第 3 步，但执行前后通过通用 hook 框架派发 <code style="font-family:var(--mono)">PreCompact</code> / <code style="font-family:var(--mono)">PostCompact</code>——内置那个 <code style="font-family:var(--mono)">priority=High</code> 的摘要 hook，和用户自己写的 hook 走<b style="color:var(--ink)">同一个调度器</b>。</div>
+        <div class="small"><b style="color:var(--ink)">Memory = Interceptor + Hook</b>：召回在 Interceptor（L1，一次 run 开头塞进上下文），抽取与新鲜度校验在 Hook（L2，不需要同步、可以异步）。</div>
+      </div>
+    </div>
+  </div>
+  <div class="foot"><span>一句话：写死的管「每轮必须发生的」，Interceptor 管「每次 run 改一次上下文的」，Hook 管「循环内某时刻对外开放的」</span><span class="src">§2</span></div>
+</section>
+
+<!-- 5 分层 -->
+<section class="slide">
+  <div class="eyebrow">全局分层</div>
+  <h2>Core / Harness / Surface 同心圆</h2>
+  <div class="lede">分层判据只有一条：<b>改动它会不会改变「一次推理循环的形状」</b>。</div>
+  <div class="body">
+    <div class="ring">
+      <svg width="380" height="380" viewBox="0 0 380 380">
+        <circle cx="190" cy="190" r="175" fill="none" stroke="var(--line2)" stroke-width="1.5"/>
+        <circle cx="190" cy="190" r="132" fill="none" stroke="var(--line2)" stroke-width="1.5"/>
+        <circle cx="190" cy="190" r="86"  fill="none" stroke="var(--line2)" stroke-width="1.5"/>
+        <circle cx="190" cy="190" r="76"  fill="var(--brand-bg)" stroke="var(--brand)" stroke-width="2"/>
+        <circle cx="190" cy="190" r="122" fill="none" stroke="var(--warn)" stroke-width="2" stroke-dasharray="5 4"/>
+        <circle cx="190" cy="190" r="165" fill="none" stroke="var(--teal)" stroke-width="2" stroke-dasharray="5 4"/>
+        <text x="190" y="182" text-anchor="middle" font-size="17" font-weight="700" fill="var(--brand-ink)">Core</text>
+        <text x="190" y="204" text-anchor="middle" font-size="11.5" fill="var(--ink2)">推理循环本身</text>
+        <text x="190" y="60"  text-anchor="middle" font-size="13" font-weight="700" fill="var(--warn)">Harness</text>
+        <text x="190" y="20"  text-anchor="middle" font-size="13" font-weight="700" fill="var(--teal)">Surface</text>
+        <text x="190" y="318" text-anchor="middle" font-size="11" fill="var(--ink3)">改动会不会改变一次循环的形状？</text>
+      </svg>
+      <div class="legend">
+        <div class="lg"><span class="sw" style="background:var(--brand)"></span><div><div class="t">Core — 会改变</div><div class="d">loop 本身，加上它离不开的两样：<b>模型路由</b>与<b>工具总线</b>。</div></div></div>
+        <div class="lg"><span class="sw" style="background:var(--warn)"></span><div><div class="t">Harness — 不改变，只让它更好</div><div class="d">压缩、记忆、Skill、MCP、权限与 Hook、Subagent/Workflow、沙箱、配置与观测。改它们<b>只改变每一步看到什么、能做什么、留下什么</b>。</div></div></div>
+        <div class="lg"><span class="sw" style="background:var(--teal)"></span><div><div class="t">Surface — 完全不参与</div><div class="d">TUI、桌面 GUI、headless/协议服务、定时任务、IM 机器人。只负责把 loop 接到人或机器上。<b>换宿主不影响前两层</b>——这正是边界真实存在的证据。</div></div></div>
+      </div>
+    </div>
+  </div>
+  <div class="foot"><span>文档顺序也是这个：Core → Harness → Surfaces（UI 放最后）</span><span class="src">§0 · §25</span></div>
+</section>
+
+<!-- 6 装配 -->
+<section class="slide">
+  <div class="eyebrow">Harness · 装配总表</div>
+  <h2>每个组件插在 loop 的哪一层、哪一步</h2>
+  <div class="lede">装配顺序按<b>真实请求时间线</b>：外层 Interceptor → 内层写死骨架 → 序列化前 → 工具循环 → 收尾。</div>
+  <div class="body">
+    <div class="card pad">
+      <table>
+        <thead><tr><th style="width:20%">组件</th><th style="width:14%">挂在 §1 哪层</th><th style="width:16%">挂载机制</th><th style="width:14%">生效时机</th><th>对上下文做了什么</th></tr></thead>
+        <tbody>
+          <tr><td><b>记忆召回</b></td><td><span class="tag">L1</span></td><td>Interceptor</td><td>每次 run</td><td>把相关记忆追加到 input 末尾</td></tr>
+          <tr><td><b>plugin runtime join</b></td><td><span class="tag">L1</span></td><td>Interceptor</td><td>每次 run</td><td>合并插件提供的工具与提示</td></tr>
+          <tr><td><b>上下文压缩</b></td><td><span class="tag o">L3</span></td><td>写死（第 3 步）+ 派发</td><td>每轮</td><td>命中水位就把历史换成结构化摘要</td></tr>
+          <tr><td><b>死循环检测</b></td><td><span class="tag o">L3</span></td><td>写死（第 2 步）</td><td>每轮</td><td>重复调用达阈值即打断</td></tr>
+          <tr><td><b>system-reminder 注入</b></td><td><span class="tag o">L3</span></td><td>写死（第 5 步）</td><td>每轮</td><td>动态提醒塞进用户消息尾部，不碰缓存前缀</td></tr>
+          <tr><td><b>权限裁决</b></td><td><span class="tag p">L2</span></td><td>Hook · PreToolUse</td><td>每次工具调用</td><td>允许 / 拒绝 / 转交模型判断</td></tr>
+          <tr><td><b>沙箱执行</b></td><td><span class="tag p">L2</span></td><td>写死 + OS 强制</td><td>每次工具执行</td><td>结果带 <code>sandboxDenied</code> 结构化字段回传</td></tr>
+          <tr><td><b>记忆抽取</b></td><td><span class="tag p">L2</span></td><td>Hook · Stop</td><td>run 结束</td><td>派生子 agent 写记忆文件（默认关闭，见 §11.10）</td></tr>
+          <tr><td><b>会话摘要</b></td><td><span class="tag p">L2</span></td><td>Hook · PreCompact</td><td>压缩前</td><td>更新 <code>summaryService</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="grid g3">
+      <div class="kpi b"><div class="n" style="font-size:19px">sync / async 判据</div><div class="l">「它必须改变这一轮的输入吗？」是 → 写死或 Interceptor；能事后补 → Hook。</div></div>
+      <div class="kpi w"><div class="n" style="font-size:19px">元操作一律隔离</div><div class="l">压缩 agent 零工具、抽取 agent 5 工具 + <code>runWithoutHistory()</code>。</div></div>
+      <div class="kpi p"><div class="n" style="font-size:19px">会变的东西排最后</div><div class="l">volatile 工具排尾部、提醒塞进用户消息、动态目录寄生在工具描述里。</div></div>
+    </div>
+  </div>
+  <div class="foot"><span>外层的 Interceptor 与内层的写死骨架是「嵌套」关系，不是两次独立的 pass</span><span class="src">§7 · §7.1</span></div>
+</section>
+
+<!-- 7 消息协议 -->
+<section class="slide">
+  <div class="eyebrow">核心 · 落盘真相源</div>
+  <h2>消息协议与会话树：一份能被撤销、归因、压缩、分叉的会话</h2>
+  <div class="lede">裸 loop 的 <code style="font-family:var(--mono)">messages[]</code> 有五件事做不到——这份协议的两个字段（<b>id / parentId</b>）+ 一组旁挂类型 + 一块 <code style="font-family:var(--mono)">providerData</code> 全补上了。</div>
+  <div class="body">
+    <div class="grid g2">
+      <div class="card pad">
+        <div class="h">一次 turn 落盘成什么（真实截取）</div>
+        <div class="tree">
+          <div>message · <b>role=user</b>　　　　← 用户这一轮输入</div>
+          <div style="color:var(--ink3)">file-history-snapshot　← 无 parentId，旁挂</div>
+          <div>reasoning　　　　　　　← 思维链独立成 record</div>
+          <div>message · role=assistant</div>
+          <div>function_call · Bash　┐ 两个并行调用</div>
+          <div>function_call · Bash　┘ <span style="color:var(--warn)">串成链，不是并列</span></div>
+          <div>function_call_result ×2</div>
+          <div>reasoning　　　　　　　← 下一轮开始</div>
+        </div>
+        <div class="small" style="margin-top:14px">反直觉：<b style="color:var(--ink)">并行调用在树里是串成链</b>（99 次）。树的分叉是留给「人的后悔」，不是留给并行的。</div>
+      </div>
+      <div class="card pad">
+        <div class="h">一次真实分叉（本会话实证）</div>
+        <div class="tree">
+          <div>父 · message <span style="color:var(--ink3)">&lt;cb_summary&gt;</span>　← 第 5 次压缩摘要</div>
+          <div class="dead"> ├ message · 原用户消息　　废弃支：2 个节点</div>
+          <div class="note"> ├ resend-fork-notice　　editedUserItemId → 原消息</div>
+          <div class="live"> └ message · 改后消息　　新支：234 个节点</div>
+        </div>
+        <div class="small" style="margin-top:14px">用户编辑已发送消息并重发：旧内容<b style="color:var(--ink)">一个字节没动</b>，新内容作为兄弟节点挂上去。<code style="font-family:var(--mono)">getActiveHistory()</code> 从 lastMessageId 回溯主链——<b style="color:var(--ink)">删历史变成了挪指针</b>。</div>
+        <div class="small" style="margin-top:12px; padding:11px 13px; background:var(--purple-bg); border-radius:10px; color:var(--ink)">
+          压缩会切断物理父 → 于是有 <code style="font-family:var(--mono)">logicalParentId</code>。<b>7 次压缩 ↔ 7 条只带逻辑父的记录，id 与时间戳逐一对应</b>。这棵树有两种边。
+        </div>
+      </div>
+    </div>
+    <div class="grid g4">
+      <div class="kpi"><div class="n">8</div><div class="l">record 类型（1,737 条快照）</div></div>
+      <div class="kpi w"><div class="n">9</div><div class="l">「非对话项」类型不进上下文<br>（快照 138 条却零上下文成本）</div></div>
+      <div class="kpi g"><div class="n">1</div><div class="l">唯一分叉点：废弃 2 vs 新支 234</div></div>
+      <div class="kpi p"><div class="n">345</div><div class="l">工具结果带结构化返回面<br><code style="font-family:var(--mono)">sandboxDenied</code> 等</div></div>
+    </div>
+  </div>
+  <div class="foot"><span>rawResponse 的正确位置是 providerData.toolResult.rawResponse，不在 output 下</span><span class="src">§3 · §3.2 · §3.3 · §3.4</span></div>
+</section>
+
+<!-- 8 Context -->
+<section class="slide">
+  <div class="eyebrow">Harness · 上下文治理</div>
+  <h2>Context 治理：唯一「不处理就一定会死」的组件</h2>
+  <div class="lede">它是唯一被<b>写死进 L3</b>（每轮模型调用前必过）的组件。检查发生在<b>发请求之前</b>，不是之后。</div>
+  <div class="body">
+    <div class="card pad">
+      <div class="h">水位线（tokenUsageThresholds 实测）</div>
+      <div class="bar" style="margin-top:6px">
+        <div class="fill" style="width:100%; opacity:.18"></div>
+        <div class="mark" style="left:15%"><span>0.15 摘要</span></div>
+        <div class="mark" style="left:40%"><span>0.4 压缩</span></div>
+        <div class="mark" style="left:50%"><span>0.5 发消息前预检</span></div>
+        <div class="mark" style="left:90%"><span>0.9 紧急</span></div>
+      </div>
+      <div class="scale"><span>0</span><span>上下文窗口</span><span>1.0</span></div>
+      <div class="small" style="margin-top:16px">
+        deepseek 的 compact 阈值被<b style="color:var(--ink)">单独放宽到 0.5</b>——阈值是按模型上下文特性调过的。摘要水位（0.15）远低于压缩（0.4）：<b style="color:var(--ink)">摘要是持续增量维护，压缩是最后兜底的一次性大动作</b>。
+      </div>
+    </div>
+    <div class="grid g3">
+      <div class="col blue"><div class="ch">context_compact</div><div class="cb">常规压缩：preMessage 水位命中即触发，输出 <b>6 维</b>摘要，<b>&lt;1000 词</b>。</div><div class="cf">agent：compact · tools: []</div></div>
+      <div class="col orange"><div class="ch">context_summary_pre_message</div><div class="cb">每次发消息前的<b>轻量摘要维护</b>，对应 0.15 那个低水位。</div><div class="cf">持续增量，不是一次性动作</div></div>
+      <div class="col redc"><div class="ch">context_summary_max_token</div><div class="cb"><b>濒死恢复</b>：逼近窗口硬顶的兜底，输出 <b>9 维</b>，要求逐字引用断点原文。</div><div class="cf">多出 Pending Tasks / Current Work / Next Step</div></div>
+    </div>
+    <div class="card pad">
+      <div class="h">checkAutoCompact() 的四道实证细节</div>
+      <div class="grid g4" style="margin-top:4px">
+        <div class="small"><b style="color:var(--ink)">水位怎么算</b><br>优先用上次 API 返回的 inputTokens；为 0 且有历史，退回本地估算。</div>
+        <div class="small"><b style="color:var(--ink)">尾部补偿</b><br>把尚未计入 usage 的尾部工具返回单独估出来加上——避免刚跑完大 Grep 却误判安全。</div>
+        <div class="small"><b style="color:var(--ink)">去重保护</b><br>上次压缩后没有实质新内容就跳过。</div>
+        <div class="small"><b style="color:var(--ink)">极端恢复</b><br>工具结果被排除（<i>excluding tool results</i>）——此时重要的是意图与断点，不是过程。</div>
+      </div>
+    </div>
+  </div>
+  <div class="foot"><span>三个触发点是「常态维护 → 常规压缩 → 濒死恢复」的三级递进，不是二选一</span><span class="src">§8 · §8.1 · §8.2 · §8.3</span></div>
+</section>
+
+<!-- 9 缓存 -->
+<section class="slide">
+  <div class="eyebrow">Harness · 成本</div>
+  <h2>让「会变的工具集」不炸掉 prompt cache</h2>
+  <div class="lede">按需装载解决了「工具太多」，却带来新问题：<b>工具集在会话中途变化，凭什么不炸掉缓存前缀？</b></div>
+  <div class="body">
+    <div class="card pad">
+      <div class="h">输入是一份五桶账本（不是一坨字符串）</div>
+      <div class="buckets" style="margin-top:8px">
+        <div class="bk s1" style="flex:3">systemPrompt</div>
+        <div class="bk s2" style="flex:4">conversation</div>
+        <div class="bk s3" style="flex:2">tools</div>
+        <div class="bk s4" style="flex:1.2">mcp</div>
+        <div class="bk s5" style="flex:1.2">skills</div>
+      </div>
+      <div class="small" style="margin-top:16px">
+        后两桶最巧：<b style="color:var(--ink)">MCP 工具清单和技能目录不在 system prompt 里</b>，它们是「寄生在工具描述里的动态内容」——靠两条正则从 <code style="font-family:var(--mono)">ToolSearch</code> 与 <code style="font-family:var(--mono)">Skill</code> 的描述里抠出来单列统计。系统提示是缓存前缀，不能被会变的东西污染。
+      </div>
+    </div>
+    <div class="grid g4">
+      <div class="kpi b"><div class="n" style="font-size:17px">① volatile 自声明</div><div class="l">会变的工具（如 Skill 目录）标记 <code>promptCacheStability: volatile</code>，序列化前剥离。</div></div>
+      <div class="kpi p"><div class="n" style="font-size:17px">② 稳定者排前面</div><div class="l"><code>orderToolsForPromptCache</code>：稳定在前，volatile 排到尾部。</div></div>
+      <div class="kpi g"><div class="n" style="font-size:17px">③ 单一断点</div><div class="l"><code>cache_control</code> 只打在最后一条系统消息的最后一块，且条件化。</div></div>
+      <div class="kpi w"><div class="n" style="font-size:17px">④ defer_loading</div><div class="l">23 个工具延迟下发；若搜索工具缺失则全部回退为 false。</div></div>
+    </div>
+    <div class="small" style="padding:14px 16px; background:var(--ok-bg); border-radius:12px; color:var(--ink)">
+      <b>延迟加载不绕过治理</b>——<code style="font-family:var(--mono)">DeferExecuteTool</code> 原文：<i>The target tool's permission checks and hooks are applied normally.</i> 延迟的只是 schema 的下发时机，权限裁决与 hook 照常执行。
+    </div>
+  </div>
+  <div class="foot"><span>命中多少可直接从 usage.inputTokensDetails.cached_tokens 读出</span><span class="src">§9 · §9.1 · §9.2 · §13.3</span></div>
+</section>
+
+<!-- 10 Memory -->
+<section class="slide">
+  <div class="eyebrow">Harness · 记忆</div>
+  <h2>Memory：四个挂载点，两条路径，七道门禁</h2>
+  <div class="lede">它是观察「同一个组件如何按三层分拆到不同挂载点」的<b>最佳样本</b>。</div>
+  <div class="body">
+    <div class="grid g4">
+      <div class="col blue"><div class="ch">A · 召回 <span class="tag">L1</span></div><div class="cb">run 开始前，Interceptor 挑相关记忆追加到 input 末尾。<b>每次 run 一次</b>。</div><div class="cf">lite 模型挑 ≤5 个文件</div></div>
+      <div class="col orange"><div class="ch">B · 常驻 <span class="tag o">L3</span></div><div class="cb">系统提示里常驻三层说明 + 当前 MEMORY.md 内容，<b>每轮重建</b>。</div><div class="cf">所以 MEMORY.md 必须极小</div></div>
+      <div class="col greenc"><div class="ch">C · 新鲜度 <span class="tag g">L2</span></div><div class="cb">PostToolUse + matcher=Read，仅当读记忆文件且 &gt;1 天时警告。</div><div class="cf">记忆会腐坏</div></div>
+      <div class="col purplec"><div class="ch">D · 抽取 <span class="tag p">L2</span></div><div class="cb">Stop hook，派生 <code>-memory-extractor</code> 子 agent 自动写。</div><div class="cf">5 工具 · maxTurns 5 · 不进主历史</div></div>
+    </div>
+    <div class="grid g2">
+      <div class="card pad">
+        <div class="h">长期 / 短期：两套机制 + 两条单向桥</div>
+        <table style="margin-top:4px">
+          <thead><tr><th>常见说法</th><th>对应实现</th><th>容量</th><th>腐坏</th></tr></thead>
+          <tbody>
+            <tr><td>短期（工作记忆）</td><td>上下文窗口：历史 + 压缩摘要</td><td>模型窗口</td><td>不会</td></tr>
+            <tr><td>长期 · 语义</td><td>MEMORY.md + 独立 .md + 云端画像</td><td>1e4 / 4e3 字符</td><td><b style="color:var(--danger)">会</b></td></tr>
+            <tr><td>长期 · 情景</td><td>YYYY-MM-DD.md 日志 + conversation_search</td><td>30 天蒸馏</td><td>会</td></tr>
+            <tr><td>长期 · 程序</td><td>Skill（程序性知识常驻磁盘）</td><td>按需加载</td><td>会</td></tr>
+          </tbody>
+        </table>
+        <div class="small" style="margin-top:12px">长期记忆比短期<b style="color:var(--ink)">小一个数量级</b>，因为它常驻系统提示、每轮都要付一次费。<b style="color:var(--ink)">30 天蒸馏 = 情景 → 语义的巩固</b>。</div>
+      </div>
+      <div class="card pad">
+        <div class="h">更新的七道门禁（doExtract 实证）</div>
+        <div class="steps" style="margin-top:6px">
+          <span class="step">① isEnabled() <b>默认关</b></span>
+          <span class="step">② inProgress 防重入</span>
+          <span class="step">③ 需要 session.state</span>
+          <span class="step">④ 记忆目录必须已存在</span>
+        </div>
+        <div class="steps" style="margin-top:8px">
+          <span class="step">⑤ 新增消息 &lt; 2 不抽</span>
+          <span class="step">⑥ <b>主 agent 已写过 → 跳过</b></span>
+          <span class="step">⑦ 推进游标</span>
+        </div>
+        <div class="small" style="margin-top:14px">
+          <b style="color:var(--ink)">⑥ 最巧</b>：让「模型显式写」与「自动抽取」<b style="color:var(--ink)">互斥而非叠加</b>——主动写了抽取就退位。本机 <code style="font-family:var(--mono)">memory.memoryExtraction</code> 未配置，<b style="color:var(--danger)">自动抽取此刻是关的</b>，所有记忆都靠显式写。
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="foot"><span>MEMORY.md 是索引不是记忆本身（原文：MEMORY.md is an index, not a memory）</span><span class="src">§11 · §11.9 · §11.10</span></div>
+</section>
+
+<!-- 11 权限 + 沙箱 -->
+<section class="slide">
+  <div class="eyebrow">Harness · 安全</div>
+  <h2>权限是四段流水线，沙箱是「先跑后判」</h2>
+  <div class="lede">同一个失效模式（模型会做危险的事）的两层解法：<b>一个靠判断，一个靠强制，互为兜底</b>。</div>
+  <div class="body">
+    <div class="card pad">
+      <div class="h">上：权限四段（全部发生在工具执行之前）</div>
+      <div class="flow" style="margin-top:6px">
+        <span class="node acc">① 权限模式<br><span style="font-weight:400;font-size:11px">8 种 · 先决定要不要问</span></span><span class="arw">→</span>
+        <span class="node">② 规则裁决</span><span class="arw">→</span>
+        <span class="node warnn">③ 模型裁决<br><span style="font-weight:400;font-size:11px">autoModeClassifier</span></span><span class="arw">→</span>
+        <span class="node dang">④ OS 强制<br><span style="font-weight:400;font-size:11px">沙箱</span></span>
+      </div>
+      <div class="grid g4" style="margin-top:14px">
+        <div class="kpi b" style="padding:12px"><div class="n" style="font-size:14px">default / acceptEdits / plan</div><div class="l">Always Ask · Accept Edits · 只分析不改</div></div>
+        <div class="kpi w" style="padding:12px"><div class="n" style="font-size:14px">auto</div><div class="l">AI 分类器审查本会弹窗的动作；分类器不可用→降级弹窗，弹不了就拒</div></div>
+        <div class="kpi d" style="padding:12px"><div class="n" style="font-size:14px">bypassPermissions / fullAccess</div><div class="l">两档：跳过提示 / 连危险命令检查也跳过</div></div>
+        <div class="kpi p" style="padding:12px"><div class="n" style="font-size:14px">delegate</div><div class="l">权限由父会话托管（子 agent 场景）</div></div>
+      </div>
+    </div>
+    <div class="card pad">
+      <div class="h">下：沙箱不是「先判能不能跑」，而是「先在沙箱跑一遍，看它想碰什么」</div>
+      <div class="flow" style="margin-top:6px">
+        <span class="node acc">① 沙箱首跑</span><span class="arw">→</span>
+        <span class="node">② 收集被拦记录</span><span class="arw">→</span>
+        <span class="node warnn">③ 归因：actionable / 噪声 / 可忽略</span><span class="arw">→</span>
+        <span class="node">④ 分流：放行 / 补问 / 硬停 / 脱沙箱重跑</span>
+      </div>
+      <div class="grid g3" style="margin-top:14px">
+        <div class="small"><b style="color:var(--ink)">为什么必须这样</b><br>一条 shell 命令会碰什么，事前根本判不准——<code style="font-family:var(--mono)">npm install</code> 写哪几个目录、git 钩子执行什么、脚本里有没有 curl。</div>
+        <div class="small"><b style="color:var(--ink)">归因是关键</b><br>「只碰元数据且命令成功」<b>不升级为拦截</b>（<i>metadata-only denial kept as non-escalating</i>），否则弹窗会淹没用户。</div>
+        <div class="small"><b style="color:var(--ink)">降级路径暴露优先级</b><br>broker 只在 macOS 启、启动失败继续跑、查询 300ms 超时走回退 → <b style="color:var(--danger)">沙箱挂了是「无沙箱继续」</b>，这恰好证明上面的判断层才是真正安全网。</div>
+      </div>
+    </div>
+  </div>
+  <div class="foot"><span>sandboxDenied 是一等字段：模型能据此改道，而不是撞上一个抛错</span><span class="src">§14 · §14.1 · §16 · §16.1</span></div>
+</section>
+
+<!-- 12 次级调用 -->
+<section class="slide">
+  <div class="eyebrow">反直觉的事实</div>
+  <h2>harness 里塞满了「看不见的」次级 LLM 调用</h2>
+  <div class="lede">除了主循环那次推理，还藏着十几类<b>打杂的</b>模型调用。它们跑在隔离会话里、<b>不计入主历史</b>，却占掉了可观的延迟与成本。</div>
+  <div class="body">
+    <div class="grid g2">
+      <div class="card pad">
+        <div class="h">19 个注册 agent，真正给用户干活的只有 4 个</div>
+        <div class="grid g2" style="margin-top:6px">
+          <div class="col greenc"><div class="ch">面向用户 · 4</div><div class="cb">cli<br>general-purpose<br>Explore<br>Plan</div></div>
+          <div class="col redc"><div class="ch">元能力 · 15</div><div class="cb">compact · contextSummary<br>memorySelector · summaryGenerator<br>autoModeClassifier · promptHookEvaluator<br>insightsAnalyzer · terminalTitleGenerator<br>contentAnalyzer · enhance-prompt …</div></div>
+        </div>
+        <div class="small" style="margin-top:14px">内核自己就有这个概念的名字：<code style="font-family:var(--mono)">classifyTrace()</code> 里一个硬编码 17 名的 Set，命中即返回 <b style="color:var(--ink)">"auxiliary"</b>。</div>
+      </div>
+      <div class="card pad">
+        <div class="h">七道成本约束（它们永远都在）</div>
+        <div class="grid g2" style="margin-top:6px; gap:10px">
+          <div class="small"><b style="color:var(--ink)">① lite 档模型</b>　② 输出硬顶 256/8192 　<b style="color:var(--ink)">③ temperature: 0</b>　④ maxTurns 1</div>
+          <div class="small"><b style="color:var(--ink)">⑤ 两级级联</b>（快判通过就不进深思）　⑥ 超时 60s/120s　⑦ 熔断 + kill switch</div>
+          <div class="small"><b style="color:var(--ink)">stopSequences</b>：<code style="font-family:var(--mono)">["&lt;/block&gt;"]</code>　·　元 agent 多数 <code style="font-family:var(--mono)">tools: []</code></div>
+          <div class="small"><b style="color:var(--ink)">可回放</b>：失败时 dumpError 落盘，供事后复现</div>
+        </div>
+        <div class="small" style="margin-top:14px; padding:12px 14px; background:var(--brand-bg); border-radius:10px; color:var(--ink)">
+          <b>但规则永远在模型前面</b>：确定性投影为空则直接 allow（零调用）、超 token 预算直接抛错、模型输出不可解析时 <b>fail closed</b>。诚实的表述是——<b>规则定义边界，模型仲裁灰区，规则兜住模型的失败</b>。
+        </div>
+      </div>
+    </div>
+    <div class="grid g4">
+      <div class="kpi p"><div class="n">22</div><div class="l">runOneTime 调用点</div></div>
+      <div class="kpi w"><div class="n">25,466</div><div class="l">字符 · 全库最大模板（权限分类器）</div></div>
+      <div class="kpi g"><div class="n">0</div><div class="l">主历史里元调用的记录数<br>（产物在，过程不在）</div></div>
+      <div class="kpi b"><div class="n">1 / 5</div><div class="l">分类器 / 抽取器的 maxTurns</div></div>
+    </div>
+  </div>
+  <div class="foot"><span>实证：transcript 里 providerData.agent 全是 cli，但压缩摘要与会话标题确实出现了</span><span class="src">§7.2</span></div>
+</section>
+
+<!-- 13 隔离 -->
+<section class="slide">
+  <div class="eyebrow">Harness · 隔离</div>
+  <h2>三种「上下文隔离」，解决三种不同的污染</h2>
+  <div class="lede">看起来无关的三件事——历史太长、中间结果太噪、并行写冲突——解法都指向同一个动作：<b>把一部分上下文从主线里挪出去</b>。</div>
+  <div class="body">
+    <div class="grid g3">
+      <div class="col blue"><div class="ch">时间隔离</div><div class="cb"><b>要隔离：</b>历史太长装不下<br><b>机制：</b>压缩，把过去替换成结构化摘要<br><b>边界：</b>仍是同一条主线，只是内容被重写</div><div class="cf">§8</div></div>
+      <div class="col purplec"><div class="ch">空间隔离</div><div class="cb"><b>要隔离：</b>几十次 Grep 的噪声<br><b>机制：</b>Subagent / Workflow，独立上下文、只回传结论<br><b>边界：</b>主线看不到子 agent 的探索过程</div><div class="cf">§15</div></div>
+      <div class="col tealc"><div class="ch">文件系统隔离</div><div class="cb"><b>要隔离：</b>并行 agent 改同一批文件互相覆盖<br><b>机制：</b>EnterWorktree / LeaveWorktree<br><b>边界：</b>物理文件不共享，改完再合回</div><div class="cf">§15</div></div>
+    </div>
+    <div class="card pad">
+      <div class="h">Agent 与 Workflow 是嵌套而非并列（都是空间隔离，只是控制流归属不同）</div>
+      <table style="margin-top:4px">
+        <thead><tr><th style="width:16%"></th><th>Agent tool（委派）</th><th>Workflow tool（编排）</th></tr></thead>
+        <tbody>
+          <tr><td><b>本质</b></td><td>一次调用 = 派生一个子 loop</td><td>一次调用 = 提交一段 JS 脚本</td></tr>
+          <tr><td><b>控制流</b></td><td>仍由<b>模型</b>决定</td><td>由<b>代码</b>决定（for/while/if、fan-out 拓扑）</td></tr>
+          <tr><td><b>递归</b></td><td>不受限（工具权限 <code>*</code>）</td><td>嵌套<b>仅一层</b>；子 agent 禁止再派生</td></tr>
+          <tr><td><b>返回</b></td><td>模型最终文本</td><td>runId 异步 + task-notification 回流</td></tr>
+        </tbody>
+      </table>
+      <div class="small" style="margin-top:12px">手册原话：<i>Use this tool for multi-step orchestration where <b>control flow should be deterministic</b> rather than model-driven.</i>　支持 Journal resume，所以脚本里 <code style="font-family:var(--mono)">Date.now()</code> / <code style="font-family:var(--mono)">Math.random()</code> <b style="color:var(--ink)">直接抛错</b>（会破坏确定性）。</div>
+    </div>
+  </div>
+  <div class="foot"><span>Team 是「多个平级 agent 协作」的另一种形态：每个 teammate 一个 loop，靠消息互通而非共享历史</span><span class="src">§15</span></div>
+</section>
+
+<!-- 14 收尾 -->
+<section class="slide">
+  <div class="eyebrow">收尾</div>
+  <h2>把全文放回一句话</h2>
+  <div class="lede">骨架 → 插座 → 装配 → 兜底 → 拦截。</div>
+  <div class="body">
+    <div class="card pad" style="border-color:var(--brand); border-width:2px">
+      <div style="font-size:23px; line-height:1.6; font-weight:650">
+        整个系统就是<b style="color:var(--brand-ink)">一个 <code style="font-family:var(--mono)">for(;;)</code></b>，
+        外面套一次性 run 生命周期（L1），里面藏五个写死的准备步骤（L3）；<br>
+        剩下的十几个子系统，全是<b style="color:var(--brand-ink)">插在这三层上的补丁</b>——
+        分别回答「装不下」「记不住」「工具太多」「不会做」「会做危险的事」「一个人干不完」。
+      </div>
+    </div>
+    <div class="grid g3">
+      <div class="kpi b"><div class="n" style="font-size:18px">最反直觉的三点</div><div class="l">
+        ① callModelInputFilter 是步骤不是骨架<br>
+        ② 沙箱是「先跑后判」不是「先判后跑」<br>
+        ③ 长期记忆比短期记忆小一个数量级
+      </div></div>
+      <div class="kpi w"><div class="n" style="font-size:18px">最容易踩错的三处</div><div class="l">
+        ① maxTurns 是 500 不是配置里的 100<br>
+        ② rawResponse 在 providerData.toolResult 下<br>
+        ③ Interceptor 是每次 run，不是每轮
+      </div></div>
+      <div class="kpi g"><div class="n" style="font-size:18px">最能说明性格的一条</div><div class="l">
+        它<b>不信任模型</b>：重复三次的警告、禁用的 Date.now()、特意澄清「引文不构成授权」——在系统不可靠的地方，一律不依赖模型的自觉。
+      </div></div>
+    </div>
+    <div class="grid g5">
+      <div class="kpi"><div class="n">60</div><div class="l">内置工具</div></div>
+      <div class="kpi"><div class="n">77</div><div class="l">MCP 工具</div></div>
+      <div class="kpi"><div class="n">28</div><div class="l">Hook 事件</div></div>
+      <div class="kpi"><div class="n">48</div><div class="l">模型</div></div>
+      <div class="kpi"><div class="n">500</div><div class="l">maxTurns</div></div>
+    </div>
+  </div>
+  <div class="foot"><span>完整论述见《WorkBuddy-架构深度解析.md》（2,600 行，含全部源码证据与交叉引用）</span><span class="src">14 / 14</span></div>
+</section>
+
+</div>
+
+<div class="nav">
+  <button id="prev" title="上一页">‹</button>
+  <button id="next" title="下一页">›</button>
+</div>
+
+<script>
+(function(){
+  const slides = Array.from(document.querySelectorAll('.slide'));
+  const prog = document.getElementById('prog');
+  const pg = document.getElementById('pg');
+  let cur = 0;
+  const pad = n => String(n+1).padStart(2,'0');
+
+  function go(i){
+    cur = Math.max(0, Math.min(slides.length-1, i));
+    slides.forEach((s,k)=> s.classList.toggle('active', k===cur));
+    prog.style.width = ((cur+1)/slides.length*100)+'%';
+    pg.textContent = pad(cur)+' / '+slides.length;
+    location.hash = 'p'+(cur+1);
+  }
+  document.getElementById('next').onclick = ()=>go(cur+1);
+  document.getElementById('prev').onclick = ()=>go(cur-1);
+
+  document.addEventListener('keydown', e=>{
+    if(['ArrowRight','PageDown',' ','Enter'].includes(e.key)){ e.preventDefault(); go(cur+1); }
+    else if(['ArrowLeft','PageUp','Backspace'].includes(e.key)){ e.preventDefault(); go(cur-1); }
+    else if(e.key==='Home'){ go(0); }
+    else if(e.key==='End'){ go(slides.length-1); }
+  });
+
+  // 滚轮 / 触摸翻页
+  let lock=false;
+  window.addEventListener('wheel', e=>{
+    if(lock) return;
+    if(Math.abs(e.deltaY) < 24) return;
+    lock = true; setTimeout(()=>lock=false, 620);
+    go(cur + (e.deltaY>0?1:-1));
+  }, {passive:true});
+
+  let ty=null;
+  window.addEventListener('touchstart', e=>{ ty = e.touches[0].clientY; }, {passive:true});
+  window.addEventListener('touchend', e=>{
+    if(ty===null) return;
+    const dy = ty - e.changedTouches[0].clientY;
+    if(Math.abs(dy) > 60) go(cur + (dy>0?1:-1));
+    ty=null;
+  }, {passive:true});
+
+  // 双击页眉区域翻页（单击不翻页，避免干扰选中文字）
+  document.addEventListener('dblclick', e=>{
+    if(e.target.closest('button,a,.nav')) return;
+    if(window.getSelection && String(window.getSelection()).length) return;
+    go(cur+1);
+  });
+
+  const h = parseInt((location.hash||'').replace('#p',''), 10);
+  go(isNaN(h)?0:h-1);
+})();
+</script>
+</body>
+</html>
