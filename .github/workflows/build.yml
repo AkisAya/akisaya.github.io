@@ -11,9 +11,8 @@ on:
 
 # Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
 permissions:
-  contents: read
-  pages: write
-  id-token: write
+  # 需要写权限才能把构建产物 push 回 master
+  contents: write
 
 # Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
 # However, do NOT cancel in-progress runs as we want to allow these production deployments to complete.
@@ -42,14 +41,15 @@ jobs:
 
       - name: Deploy
         env:
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
           GITALK_CLINET_ID: ${{ secrets.GITALK_CLINET_ID }}
           GITALK_CLINET_SECRET: ${{ secrets.GITALK_CLINET_SECRET }}
         run: |
           git config --global user.email "akikevinsama@gmail.com"
           git config --global user.name "akisaya"
-          # token 必须放在「密码」位（用户名占位即可），写成 TOKEN@github.com 会在 CI 里要求交互式输入密码而失败
-          sed -i'' "/^ *repo/s~github\.com~AkisAya:${GH_TOKEN}@github.com~" _config.yml
+          # 用 CI 内置的 GITHUB_TOKEN 给所有 github.com 的 git 请求注入鉴权头：
+          # 无需再维护 PAT，也不会过期。比把凭据写进 URL 更稳。
+          git config --global --add http.https://github.com/.extraheader \
+            "AUTHORIZATION: basic $(printf 'x-access-token:%s' '${{ secrets.GITHUB_TOKEN }}' | base64 | tr -d '\n')"
           sed -i'' "/^ *client_id:/s/client_id: *$/& ${GITALK_CLINET_ID}/" _config.next.yml
           sed -i'' "/^ *client_secret:/s/client_secret: *$/& ${GITALK_CLINET_SECRET}/" _config.next.yml
           npm run deploy
