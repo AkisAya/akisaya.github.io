@@ -48,7 +48,8 @@ jobs:
         run: |
           git config --global user.email "akikevinsama@gmail.com"
           git config --global user.name "akisaya"
-          sed -i'' "/^ *repo/s~github\.com~${GH_TOKEN}@github.com~" _config.yml
+          # token 必须放在「密码」位（用户名占位即可），写成 TOKEN@github.com 会在 CI 里要求交互式输入密码而失败
+          sed -i'' "/^ *repo/s~github\.com~AkisAya:${GH_TOKEN}@github.com~" _config.yml
           sed -i'' "/^ *client_id:/s/client_id: *$/& ${GITALK_CLINET_ID}/" _config.next.yml
           sed -i'' "/^ *client_secret:/s/client_secret: *$/& ${GITALK_CLINET_SECRET}/" _config.next.yml
           npm run deploy
