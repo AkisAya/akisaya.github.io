@@ -12,7 +12,7 @@ tags: [架构, Agent, 逆向, WorkBuddy]
 > 全部结论来自本机 `/Applications/WorkBuddy.app` 与 `~/.workbuddy` 的实际产物（二进制、配置、源码、数据库、会话日志）。
 > 凡属推断而非直接观测的条目，均以 **[推断]** 标注。
 
-**想先看图**：[WorkBuddy 架构图解 · 14 屏演示](/pages/workbuddy-arch.html) —— 图表为主，十分钟左右看完骨架。本文是它的完整论述版，含全部源码证据与逐条实证。
+**想先看图**：[WorkBuddy 架构图解 · 14 屏演示](/misc/workbuddy-arch.html) —— 图表为主，十分钟左右看完骨架。本文是它的完整论述版，含全部源码证据与逐条实证。
 
 <!--more-->
 
@@ -2618,5 +2618,5 @@ flowchart TB
 
 **相关**
 
-- [WorkBuddy 架构图解 · 14 屏演示页](/pages/workbuddy-arch.html) —— 图表版，聚焦骨架与装配
+- [WorkBuddy 架构图解 · 14 屏演示页](/misc/workbuddy-arch.html) —— 图表版，聚焦骨架与装配
 - 本文约 2,600 行、含 100+ 处源码实证。篇幅较长，文首「本文的读法」给了三档阅读建议：主干必读 6 节、组件按需查阅、附录可跳过。
