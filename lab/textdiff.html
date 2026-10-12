@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Text Diff Tool</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f0f0f0;
+            min-height: 100vh;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+        }
+
+        h1 {
+            margin-top: 0;
+            font-size: 1.5rem;
+            color: #333;
+        }
+
+        .input-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+            height: 40vh;
+            flex-shrink: 0;
+        }
+
+        textarea {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            resize: none;
+            font-family: monospace;
+            font-size: 14px;
+        }
+
+        .controls {
+            margin-bottom: 10px;
+            flex-shrink: 0;
+            text-align: center;
+        }
+
+        button {
+            padding: 8px 16px;
+            background-color: #007acc;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        button:hover {
+            background-color: #005999;
+        }
+
+        .diff-wrapper {
+            flex: 0 0 auto;
+            border: 1px solid #ccc;
+            background-color: white;
+            position: relative;
+            min-height: 240px;
+            width: 100%;
+            /* Remove Monaco's right shadow */
+            box-shadow: none !important;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Text Compare Tool</h1>
+
+    <div class="input-container">
+        <textarea id="input1" placeholder="Original Text">
+function hello() {
+    console.log("Hello World");
+    return true;
+}
+</textarea>
+        <textarea id="input2" placeholder="Modified Text">
+function hello() {
+    console.log("Hello VS Code");
+    return false;
+}
+</textarea>
+    </div>
+
+    <div class="controls">
+        <button id="compareBtn">Compare</button>
+    </div>
+
+    <div class="diff-wrapper" id="diffContainer"></div>
+
+    <script>
+        const MONACO_BASE_URL = 'https://cdn.jsdelivr.net/npm/monaco-editor@0.52.0/min';
+
+        window.require = {
+            paths: { vs: `${MONACO_BASE_URL}/vs` }
+        };
+
+        window.MonacoEnvironment = {
+            getWorkerUrl() {
+                const proxySrc = `self.MonacoEnvironment = { baseUrl: '${MONACO_BASE_URL}/' };
+importScripts('${MONACO_BASE_URL}/vs/base/worker/workerMain.js');`;
+                return `data:text/javascript;charset=utf-8,${encodeURIComponent(proxySrc)}`;
+            }
+        };
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.52.0/min/vs/loader.min.js"></script>
+    <script>
+        const input1 = document.getElementById('input1');
+        const input2 = document.getElementById('input2');
+        const compareBtn = document.getElementById('compareBtn');
+        const diffContainer = document.getElementById('diffContainer');
+        const MIN_DIFF_HEIGHT = 240;
+
+        let diffEditor;
+        let originalModel;
+        let modifiedModel;
+
+        function normalizeInput(text) {
+            if (typeof text !== 'string') {
+                return '';
+            }
+            if (typeof text.normalize === 'function') {
+                try {
+                    return text.normalize('NFC');
+                } catch (err) {
+                    // ignore normalize errors
+                }
+            }
+            return text;
+        }
+
+        window.require(['vs/editor/editor.main'], () => {
+            diffEditor = monaco.editor.createDiffEditor(diffContainer, {
+                theme: 'vs',
+                automaticLayout: true,
+                readOnly: true,
+                renderSideBySide: true,
+                scrollbar: {
+                    vertical: 'hidden',
+                    horizontal: 'hidden',
+                    handleMouseWheel: false,
+                    alwaysConsumeMouseWheel: false,
+                    useShadows: false,
+                    verticalScrollbarSize: 0,
+                    horizontalScrollbarSize: 0
+                },
+                minimap: { enabled: false },
+                scrollBeyondLastLine: false
+            });
+
+            const originalEditor = diffEditor.getOriginalEditor();
+            const modifiedEditor = diffEditor.getModifiedEditor();
+            [originalEditor, modifiedEditor].forEach(editor => {
+                if (!editor) {
+                    return;
+                }
+                editor.updateOptions({
+                    scrollbar: {
+                        vertical: 'hidden',
+                        horizontal: 'hidden',
+                        handleMouseWheel: false,
+                        alwaysConsumeMouseWheel: false,
+                        useShadows: false,
+                        verticalScrollbarSize: 0,
+                        horizontalScrollbarSize: 0
+                    },
+                    minimap: { enabled: false },
+                    scrollBeyondLastLine: false,
+                    readOnly: true
+                });
+                editor.onDidContentSizeChange(resizeDiffEditor);
+            });
+
+            updateDiff();
+        });
+
+        compareBtn.addEventListener('click', updateDiff);
+
+        function updateDiff() {
+            if (!window.monaco || !diffEditor) {
+                return;
+            }
+            if (originalModel) {
+                originalModel.dispose();
+            }
+            if (modifiedModel) {
+                modifiedModel.dispose();
+            }
+            originalModel = monaco.editor.createModel(normalizeInput(input1.value), 'plaintext');
+            modifiedModel = monaco.editor.createModel(normalizeInput(input2.value), 'plaintext');
+            diffEditor.setModel({ original: originalModel, modified: modifiedModel });
+            resizeDiffEditor();
+        }
+
+        function resizeDiffEditor() {
+            if (!diffEditor) {
+                return;
+            }
+            const originalEditor = diffEditor.getOriginalEditor();
+            const modifiedEditor = diffEditor.getModifiedEditor();
+            const originalHeight = originalEditor ? originalEditor.getContentHeight() : 0;
+            const modifiedHeight = modifiedEditor ? modifiedEditor.getContentHeight() : 0;
+            const contentHeight = Math.max(originalHeight, modifiedHeight, MIN_DIFF_HEIGHT);
+            diffContainer.style.height = `${contentHeight}px`;
+            diffEditor.layout();
+        }
+    </script>
+</body>
+</html>
